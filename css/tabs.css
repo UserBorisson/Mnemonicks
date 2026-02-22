@@ -733,13 +733,14 @@
   }
 
   /* Prevent sticky :hover on touch from leaving the rail visually expanded. */
-  .left-hover-menu:hover .left-hover-panel {
+  .left-hover-menu:hover:not(.touch-open) .left-hover-panel {
     width: 58px !important;
     min-width: 58px !important;
     max-width: 58px !important;
   }
 
   /* Touch users expand the rail while an item inside has focus. */
+  .left-hover-menu.touch-open .left-hover-panel,
   .left-hover-menu:focus-within .left-hover-panel {
     width: calc(var(--rail-width) - 16px) !important;
     min-width: calc(var(--rail-width) - 16px) !important;
@@ -750,9 +751,9 @@
     display: none;
   }
 
-  .left-hover-menu:not(:focus-within) .mode-trigger-label,
-  .left-hover-menu:not(:focus-within) .tab-text,
-  .left-hover-menu:not(:focus-within) .rail-item-label {
+  .left-hover-menu:not(.touch-open):not(:focus-within) .mode-trigger-label,
+  .left-hover-menu:not(.touch-open):not(:focus-within) .tab-text,
+  .left-hover-menu:not(.touch-open):not(:focus-within) .rail-item-label {
     inline-size: 0;
     opacity: 0;
     clip-path: inset(0 100% 0 0);
@@ -761,7 +762,7 @@
     transition-delay: 0ms, 0ms, 0ms, 0ms;
   }
 
-  .left-hover-menu:not(:focus-within) .mode-trigger-chevron {
+  .left-hover-menu:not(.touch-open):not(:focus-within) .mode-trigger-chevron {
     opacity: 0;
     transform: translateX(-2px);
     pointer-events: none;
@@ -769,12 +770,12 @@
     transition-delay: 0ms, 0ms;
   }
 
-  .left-hover-menu:not(:focus-within) .settings-btn.rail-settings-btn {
+  .left-hover-menu:not(.touch-open):not(:focus-within) .settings-btn.rail-settings-btn {
     gap: 0;
   }
 
-  .left-hover-menu:not(:focus-within) .mode-menu,
-  .left-hover-menu:not(:focus-within) .deck-menu {
+  .left-hover-menu:not(.touch-open):not(:focus-within) .mode-menu,
+  .left-hover-menu:not(.touch-open):not(:focus-within) .deck-menu {
     max-height: 0 !important;
     margin-top: 0 !important;
     opacity: 0 !important;

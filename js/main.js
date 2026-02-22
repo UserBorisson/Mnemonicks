@@ -3662,6 +3662,50 @@ function setupUI() {
   const leftHoverPanel = leftHoverMenu?.querySelector('.left-hover-panel') || null;
   const railHomeBtn = document.getElementById('railHomeBtn');
   let deckIndex = [];
+  const touchRailMediaQuery = (typeof window !== 'undefined' && typeof window.matchMedia === 'function')
+    ? window.matchMedia('(max-width: 900px), (hover: none), (pointer: coarse)')
+    : null;
+
+  function isTouchRailUi() {
+    return !!(leftHoverMenu && touchRailMediaQuery?.matches);
+  }
+
+  function isTouchRailOpen() {
+    return !!leftHoverMenu?.classList.contains('touch-open');
+  }
+
+  function setTouchRailOpen(open) {
+    if (!leftHoverMenu || !isTouchRailUi()) return;
+    leftHoverMenu.classList.toggle('touch-open', !!open);
+  }
+
+  function primeTouchRailInteraction(event, focusEl) {
+    if (!isTouchRailUi() || !leftHoverMenu || isTouchRailOpen()) return false;
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    setTouchRailOpen(true);
+    if (focusEl instanceof HTMLElement) {
+      try { focusEl.focus({ preventScroll: true }); }
+      catch { focusEl.focus(); }
+    }
+    return true;
+  }
+
+  function collapseTouchRailFromOutside(event) {
+    if (!isTouchRailUi() || !leftHoverMenu) return;
+    const target = event?.target;
+    if (target instanceof Node && leftHoverMenu.contains(target)) return;
+    setTouchRailOpen(false);
+    setMenuOpen(false);
+    setRailDeckMenuOpen(false);
+    const active = document.activeElement;
+    if (active instanceof HTMLElement && leftHoverMenu.contains(active)) {
+      try { active.blur(); } catch {}
+    }
+  }
+
+  document.addEventListener('pointerdown', collapseTouchRailFromOutside, true);
+  document.addEventListener('touchstart', collapseTouchRailFromOutside, { capture: true, passive: true });
 
   function canonicalDeckPath(path = '') {
     return normalizeDeckPath(path);
@@ -3833,6 +3877,7 @@ function setupUI() {
   function setRailDeckMenuOpen(open) {
     if (!railDeckDropdown || !railDeckTrigger || !railDeckMenu) return;
     const next = !!open;
+    if (next) setTouchRailOpen(true);
     railDeckDropdown.classList.toggle('open', next);
     railDeckTrigger.setAttribute('aria-expanded', next ? 'true' : 'false');
     railDeckMenu.setAttribute('aria-hidden', next ? 'false' : 'true');
@@ -3860,6 +3905,7 @@ function setupUI() {
   }
 
   railDeckTrigger?.addEventListener('click', async (e) => {
+    if (primeTouchRailInteraction(e, railDeckTrigger)) return;
     e.stopPropagation();
     const opening = !railDeckDropdown?.classList.contains('open');
     setRailDeckMenuOpen(opening);
@@ -4643,6 +4689,7 @@ function setupUI() {
   function setMenuOpen(open) {
     if (!tabsNav || !modeTrigger || !modeMenu) return;
     const next = !!open;
+    if (next) setTouchRailOpen(true);
     tabsNav.classList.toggle('open', next);
     modeTrigger.setAttribute('aria-expanded', next ? 'true' : 'false');
     modeMenu.setAttribute('aria-hidden', next ? 'false' : 'true');
@@ -4665,6 +4712,7 @@ function setupUI() {
   }
 
   railHomeBtn?.addEventListener('click', (e) => {
+    if (primeTouchRailInteraction(e, railHomeBtn)) return;
     e.stopPropagation();
     setMenuOpen(false);
     setRailDeckMenuOpen(false);
@@ -4725,7 +4773,8 @@ function setupUI() {
     syncMenuWidth();
   }
 
-  modeTrigger?.addEventListener('click', () => {
+  modeTrigger?.addEventListener('click', (e) => {
+    if (primeTouchRailInteraction(e, modeTrigger)) return;
     const isOpen = tabsNav?.classList.contains('open');
     setMenuOpen(!isOpen);
   });

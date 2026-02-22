@@ -7046,4 +7046,60 @@ function initHome() {
   wireActions();
 }
 
+function initTouchRailInteraction() {
+  const rail = document.querySelector(".left-hover-menu");
+  if (!rail || typeof window.matchMedia !== "function") return;
+
+  const mq = window.matchMedia("(max-width: 900px), (hover: none), (pointer: coarse)");
+  const isTouchUi = () => !!mq.matches;
+
+  const setOpen = (open) => {
+    if (!isTouchUi()) {
+      rail.classList.remove("touch-open");
+      return;
+    }
+    rail.classList.toggle("touch-open", !!open);
+  };
+
+  const blurRailFocus = () => {
+    const active = document.activeElement;
+    if (active instanceof HTMLElement && rail.contains(active)) {
+      try { active.blur(); } catch {}
+    }
+  };
+
+  const handleOutside = (event) => {
+    if (!isTouchUi()) return;
+    const target = event?.target;
+    if (target instanceof Node && rail.contains(target)) return;
+    setOpen(false);
+    blurRailFocus();
+  };
+
+  const handleRailClickCapture = (event) => {
+    if (!isTouchUi()) return;
+    const target = event?.target;
+    if (!(target instanceof Element)) return;
+    const trigger = target.closest(".mode-trigger, .deck-trigger");
+    if (!(trigger instanceof HTMLElement) || !rail.contains(trigger)) return;
+    if (rail.classList.contains("touch-open")) return;
+    event.preventDefault();
+    event.stopPropagation();
+    setOpen(true);
+    try { trigger.focus({ preventScroll: true }); }
+    catch { trigger.focus(); }
+  };
+
+  rail.addEventListener("click", handleRailClickCapture, true);
+  document.addEventListener("pointerdown", handleOutside, true);
+  document.addEventListener("touchstart", handleOutside, { capture: true, passive: true });
+
+  const handleMqChange = () => {
+    if (!isTouchUi()) rail.classList.remove("touch-open");
+  };
+  if (typeof mq.addEventListener === "function") mq.addEventListener("change", handleMqChange);
+  else if (typeof mq.addListener === "function") mq.addListener(handleMqChange);
+}
+
+initTouchRailInteraction();
 initHome();
