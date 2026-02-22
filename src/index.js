@@ -103,6 +103,14 @@ async function routeApi(request, env, _ctx, auth) {
     });
   }
 
+  if (path === `${API_PREFIX}/voices` && method === "GET") {
+    return handleTtsVoices(request, env, auth);
+  }
+
+  if (path === `${API_PREFIX}/tts` && method === "POST") {
+    return handleTtsSynthesize(request, env, auth);
+  }
+
   if (path === `${API_PREFIX}/openapi.json` && method === "GET") {
     return apiOk(request, env, buildOpenApiSkeleton(url));
   }
@@ -224,7 +232,8 @@ function summarizeBindings(env) {
   return {
     hasAssets: !!env?.ASSETS?.fetch,
     hasD1: !!env?.DB?.prepare,
-    hasDecksBucket: !!env?.DECKS_BUCKET?.get
+    hasDecksBucket: !!env?.DECKS_BUCKET?.get,
+    hasTtsUpstream: !!String(env?.TTS_UPSTREAM_BASE_URL || "").trim()
   };
 }
 
@@ -270,6 +279,232 @@ async function loadStaticDeckManifest(request, env) {
   } catch (err) {
     console.warn("Failed to read static deck manifest", err);
     return fallback;
+  }
+}
+
+async function handleTtsVoices(request, env, auth) {
+  const requireAuth = parseBooleanEnv(env?.TTS_REQUIRE_AUTH, false);
+  if (requireAuth) requireAuthenticated(auth, request, env);
+
+  const upstreamBase = String(env?.TTS_UPSTREAM_BASE_URL || "").trim();
+  if (!upstreamBase) {
+    const fallbackVoices = getFallbackTtsVoices(env);
+    return jsonResponse(fallbackVoices, 200, {
+      ...buildCorsHeaders(request, env),
+      "content-type": "application/json; charset=utf-8",
+      "cache-control": "public, max-age=300"
+    });
+  }
+
+  const upstreamUrl = buildTtsUpstreamUrl(env, "voices");
+  const forwardAuthorization = parseBooleanEnv(env?.TTS_FORWARD_AUTH, false)
+    ? String(request.headers.get("authorization") || "").trim()
+    : "";
+  const upstreamRes = await fetchWithTimeout(
+    upstreamUrl,
+    {
+      method: "GET",
+      headers: buildTtsUpstreamHeaders(env, { forwardAuthorization }),
+      cache: "no-store"
+    },
+    env,
+    15000
+  ).catch((err) => {
+    console.warn("TTS voices upstream request failed", err);
+    return null;
+  });
+
+  if (!upstreamRes) {
+    return apiError("tts_unavailable", "Could not reach the TTS voices upstream.", 502, request, env);
+  }
+
+  const contentType = upstreamRes.headers.get("content-type") || "application/json; charset=utf-8";
+  const bodyText = await upstreamRes.text();
+  if (!upstreamRes.ok) {
+    return apiError(
+      "tts_upstream_error",
+      `TTS voices upstream returned ${upstreamRes.status}.`,
+      502,
+      request,
+      env,
+      { upstreamStatus: upstreamRes.status, upstreamBody: bodyText.slice(0, 300) }
+    );
+  }
+
+  return new Response(bodyText, {
+    status: 200,
+    headers: {
+      ...buildCorsHeaders(request, env),
+      "content-type": contentType,
+      "cache-control": "public, max-age=300"
+    }
+  });
+}
+
+async function handleTtsSynthesize(request, env, auth) {
+  const requireAuth = parseBooleanEnv(env?.TTS_REQUIRE_AUTH, false);
+  if (requireAuth) requireAuthenticated(auth, request, env);
+
+  const body = await readJsonBody(request, request, env);
+  const text = String(body?.text ?? "").trim();
+  const voice = String(body?.voice ?? "").trim();
+  if (!text) {
+    return apiError("invalid_request", "Field 'text' is required.", 400, request, env);
+  }
+
+  const maxChars = getTtsMaxCharsForAuth(auth, env);
+  if (text.length > maxChars) {
+    return apiError(
+      "plan_limit_exceeded",
+      `TTS text exceeds limit (${maxChars} chars for plan '${auth?.entitlements?.plan || "free"}').`,
+      403,
+      request,
+      env,
+      { limit: maxChars }
+    );
+  }
+
+  const upstreamBase = String(env?.TTS_UPSTREAM_BASE_URL || "").trim();
+  if (!upstreamBase) {
+    return apiError(
+      "not_configured",
+      "TTS upstream is not configured. Set TTS_UPSTREAM_BASE_URL and related secrets in Wrangler.",
+      501,
+      request,
+      env
+    );
+  }
+
+  const upstreamUrl = buildTtsUpstreamUrl(env, "tts");
+  const upstreamPayload = { text, voice };
+  const forwardAuthorization = parseBooleanEnv(env?.TTS_FORWARD_AUTH, false)
+    ? String(request.headers.get("authorization") || "").trim()
+    : "";
+  const upstreamRes = await fetchWithTimeout(
+    upstreamUrl,
+    {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        ...buildTtsUpstreamHeaders(env, { forwardAuthorization })
+      },
+      body: JSON.stringify(upstreamPayload)
+    },
+    env,
+    parsePositiveIntEnv(env?.TTS_UPSTREAM_TIMEOUT_MS, 25000, 1000, 120000)
+  ).catch((err) => {
+    console.warn("TTS synth upstream request failed", err);
+    return null;
+  });
+
+  if (!upstreamRes) {
+    return apiError("tts_unavailable", "Could not reach the TTS upstream.", 502, request, env);
+  }
+
+  if (!upstreamRes.ok) {
+    const detail = await upstreamRes.text().catch(() => "");
+    return apiError(
+      "tts_upstream_error",
+      `TTS upstream returned ${upstreamRes.status}.`,
+      502,
+      request,
+      env,
+      { upstreamStatus: upstreamRes.status, upstreamBody: detail.slice(0, 300) }
+    );
+  }
+
+  const headers = {
+    ...buildCorsHeaders(request, env),
+    "cache-control": "no-store",
+    "content-type": upstreamRes.headers.get("content-type") || "audio/mpeg"
+  };
+  const errorHint = upstreamRes.headers.get("X-TTS-Error");
+  if (errorHint) headers["X-TTS-Error"] = errorHint;
+
+  return new Response(upstreamRes.body, {
+    status: 200,
+    headers
+  });
+}
+
+function getFallbackTtsVoices(env) {
+  const jsonRaw = String(env?.TTS_PUBLIC_VOICES_JSON || "").trim();
+  if (jsonRaw) {
+    try {
+      const parsed = JSON.parse(jsonRaw);
+      if (Array.isArray(parsed)) {
+        const items = parsed
+          .map((entry) => normalizeVoiceEntry(entry))
+          .filter(Boolean);
+        if (items.length) return items;
+      }
+    } catch (err) {
+      console.warn("Invalid TTS_PUBLIC_VOICES_JSON", err);
+    }
+  }
+
+  const csv = parseCsv(String(env?.TTS_PUBLIC_VOICES || ""));
+  if (csv.length) {
+    return csv.map((name) => ({ ShortName: name, Name: name }));
+  }
+
+  return [
+    { ShortName: "en-US-AriaNeural", Name: "en-US-AriaNeural" },
+    { ShortName: "en-US-GuyNeural", Name: "en-US-GuyNeural" },
+    { ShortName: "cs-CZ-VlastaNeural", Name: "cs-CZ-VlastaNeural" },
+    { ShortName: "tr-TR-AhmetNeural", Name: "tr-TR-AhmetNeural" }
+  ];
+}
+
+function normalizeVoiceEntry(entry) {
+  if (typeof entry === "string") return { ShortName: entry, Name: entry };
+  if (!isObjectRecord(entry)) return null;
+  const short = String(entry.ShortName || entry.shortName || entry.Name || entry.name || "").trim();
+  if (!short) return null;
+  return {
+    ...entry,
+    ShortName: short,
+    Name: String(entry.Name || entry.name || short)
+  };
+}
+
+function buildTtsUpstreamUrl(env, kind) {
+  const base = String(env?.TTS_UPSTREAM_BASE_URL || "").trim().replace(/\/+$/, "");
+  const path = kind === "voices"
+    ? String(env?.TTS_UPSTREAM_VOICES_PATH || "/api/voices")
+    : String(env?.TTS_UPSTREAM_TTS_PATH || "/api/tts");
+  const normalizedPath = String(path || "").trim();
+  if (/^https?:\/\//i.test(normalizedPath)) return normalizedPath;
+  return `${base}${normalizedPath.startsWith("/") ? "" : "/"}${normalizedPath}`;
+}
+
+function buildTtsUpstreamHeaders(env, { forwardAuthorization = "" } = {}) {
+  const headers = {};
+  const key = String(env?.TTS_UPSTREAM_API_KEY || "").trim();
+  const keyHeader = String(env?.TTS_UPSTREAM_API_KEY_HEADER || "X-API-Key").trim();
+  if (key && keyHeader) headers[keyHeader] = key;
+  if (forwardAuthorization) headers.authorization = forwardAuthorization;
+  return headers;
+}
+
+function getTtsMaxCharsForAuth(auth, env) {
+  const plan = String(auth?.entitlements?.plan || "free").toLowerCase();
+  if (plan === "premium") {
+    return parsePositiveIntEnv(env?.TTS_MAX_TEXT_CHARS_PREMIUM, 4000, 50, 20000);
+  }
+  if (plan === "pro") {
+    return parsePositiveIntEnv(env?.TTS_MAX_TEXT_CHARS_PRO, 2000, 50, 20000);
+  }
+  return parsePositiveIntEnv(env?.TTS_MAX_TEXT_CHARS_FREE, 1200, 50, 20000);
+}
+
+async function fetchWithTimeout(url, init, _env, timeoutMs) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort("timeout"), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -504,6 +739,20 @@ function parseCsv(value) {
     .split(",")
     .map((v) => v.trim())
     .filter(Boolean);
+}
+
+function parseBooleanEnv(value, fallback = false) {
+  const raw = String(value ?? "").trim().toLowerCase();
+  if (!raw) return !!fallback;
+  if (["1", "true", "yes", "on"].includes(raw)) return true;
+  if (["0", "false", "no", "off"].includes(raw)) return false;
+  return !!fallback;
+}
+
+function parsePositiveIntEnv(value, fallback, min = 1, max = Number.MAX_SAFE_INTEGER) {
+  const n = Number.parseInt(String(value ?? "").trim(), 10);
+  if (!Number.isFinite(n) || n <= 0) return fallback;
+  return Math.max(min, Math.min(max, n));
 }
 
 class HttpError extends Error {

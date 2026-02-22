@@ -1114,6 +1114,7 @@ function setMcqAnswersOnCard(next, { rerender = true } = {}) {
 /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ TTS state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 let ttsOn = (() => { try { return localStorage.getItem(TTS_KEY) === '1'; } catch { return false; } })();
 let ttsEndpoint = '';
+let localToolApiBase = '';
 let syncingFaceFromSpeaker = false;
 let syncingSpeakerFromFace = false;
 let syncTtsPrefControls = () => {};
@@ -1139,16 +1140,24 @@ if (!ttsOn && (ttsFacePrefs.front || ttsFacePrefs.back)) {
   persistTtsFacePrefs();
 }
 
-// Point to the TTS server on the same host as the page (works over LAN)
+// TTS runs through the deployed Worker API (/api); local calculator remains on :8001.
 const initVoice = normalizeTtsVoiceValue(ttsVoicePrefs.back);
 try {
   const proto = window.location.protocol;
   const host  = window.location.hostname || 'localhost';
-  ttsEndpoint = `${proto}//${host}:8001`;
+  const ttsOverride = (typeof window.TTS_API_BASE === 'string' && window.TTS_API_BASE.trim())
+    ? window.TTS_API_BASE.trim()
+    : (localStorage.getItem('TTS_API_BASE') || '').trim();
+  // `audio.js` appends `/api/...`, so this must be the origin/base host, not `/api`.
+  ttsEndpoint = (ttsOverride || window.location.origin)
+    .replace(/\/+$/, '')
+    .replace(/\/api$/i, '');
+  localToolApiBase = `${proto}//${host}:8001`;
   initTTS({ endpoint: ttsEndpoint, voice: initVoice });
   activeTtsVoice = initVoice;
 } catch {
-  ttsEndpoint = 'http://127.0.0.1:8001';
+  ttsEndpoint = '';
+  localToolApiBase = 'http://127.0.0.1:8001';
   initTTS({ endpoint: ttsEndpoint, voice: initVoice });
   activeTtsVoice = initVoice;
 }
@@ -1477,7 +1486,7 @@ let calculatorAppOn = false;
 let calculatorBusy = false;
 
 function getCalculatorApiBase() {
-  return (ttsEndpoint || 'http://127.0.0.1:8001').replace(/\/+$/, '');
+  return (localToolApiBase || 'http://127.0.0.1:8001').replace(/\/+$/, '');
 }
 
 function updateCalculatorButtonState(on = calculatorAppOn) {
