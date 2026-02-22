@@ -61,7 +61,7 @@ const STAR_CFG_KEY       = 'STAR_CFG_V1';
 const DECK_PATH_KEY      = 'DECK_PATH_V1';
 const RECENT_DECKS_KEY   = 'RECENT_DECKS_V1';
 const RECENT_DECK_LIMIT  = 3;
-const NON_DECK_JSON_FILENAMES = new Set(['fsrs_params.json']);
+const NON_DECK_JSON_FILENAMES = new Set(['fsrs_params.json', 'manifest.json']);
 const FSRS_PARAMS_URLS = [
   'config/fsrs_params.json',
   'decks/fsrs_params.json'
@@ -331,6 +331,36 @@ function deckWriterHeaders() {
 }
 
 async function listDecksFromServer(){
+  try {
+    const res = await fetch('decks/manifest.json', { cache: 'no-store' });
+    if (res.ok) {
+      const data = await res.json();
+      const rawList = Array.isArray(data)
+        ? data
+        : (Array.isArray(data?.decks) ? data.decks : []);
+      const items = rawList
+        .map(entry => {
+          if (typeof entry === 'string') {
+            const name = entry.split('/').pop() || entry;
+            return { name, path: entry.includes('/') ? entry : `decks/${entry}` };
+          }
+          if (entry && typeof entry === 'object') {
+            const rawPath = String(entry.path || entry.name || '').trim();
+            const rawName = String(entry.name || rawPath.split('/').pop() || '').trim();
+            if (!rawPath && !rawName) return null;
+            return {
+              name: rawName || (rawPath.split('/').pop() || ''),
+              path: rawPath.includes('/') ? rawPath : `decks/${rawPath || rawName}`
+            };
+          }
+          return null;
+        })
+        .filter(item => item && item.name && item.path)
+        .filter(item => /\.json$/i.test(item.path) && !isExcludedDeckPath(item.path));
+      const seen = new Set();
+      return items.filter(o => (seen.has(o.path.toLowerCase()) ? false : seen.add(o.path.toLowerCase())));
+    }
+  } catch {}
   try {
     const res = await fetch('decks/');
     const txt = await res.text();

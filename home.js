@@ -80,7 +80,7 @@ const HEATMAP_DAYS = 371;
 const DEFAULT_REVIEW_SECONDS = 35;
 const PROFILE_NAME_KEYS = ["USER_PROFILE_NAME", "PROFILE_NAME_V1", "PROFILE_NAME", "USER_NAME"];
 const PROFILE_AVATAR_KEYS = ["USER_PROFILE_AVATAR_URL", "PROFILE_AVATAR_URL", "USER_AVATAR_URL"];
-const NON_DECK_JSON_FILENAMES = new Set(["fsrs_params.json"]);
+const NON_DECK_JSON_FILENAMES = new Set(["fsrs_params.json", "manifest.json"]);
 const HIDDEN_HOME_DECK_KEYS = new Set(["gen:biofyz"]);
 
 let homeData = null;
@@ -4756,6 +4756,33 @@ async function loadDeckCardsForPreview(deckPath) {
 }
 
 async function listDeckPathsFromServer() {
+  try {
+    const response = await fetch("decks/manifest.json", { cache: "no-store" });
+    if (response.ok) {
+      const data = await response.json();
+      const rawList = Array.isArray(data)
+        ? data
+        : (Array.isArray(data?.decks) ? data.decks : []);
+      const paths = rawList
+        .map((entry) => {
+          if (typeof entry === "string") return entry;
+          if (entry && typeof entry === "object") return String(entry.path || entry.name || "").trim();
+          return "";
+        })
+        .map((href) => normalizeDeckPathForSave(href.includes("/") ? href : `decks/${href}`))
+        .filter((href) => href && /\.json$/i.test(href) && !isExcludedDeckKey(href));
+      const seen = new Set();
+      const unique = [];
+      paths.forEach((path) => {
+        const key = String(path).toLowerCase();
+        if (seen.has(key)) return;
+        seen.add(key);
+        unique.push(path);
+      });
+      return new Set(unique);
+    }
+  } catch {
+  }
   try {
     const response = await fetch("decks/", { cache: "no-store" });
     if (!response.ok) return null;
