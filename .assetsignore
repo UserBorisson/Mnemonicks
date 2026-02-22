@@ -1,5 +1,6 @@
 src/
 docs/
+services/
 .git/
 .gitignore
 .assetsignore
