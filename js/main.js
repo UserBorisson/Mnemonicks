@@ -333,12 +333,29 @@ function normalizeDeckPathForSave(input) {
 
 function deckWriterBases() {
   const bases = [];
-  const override = window.DECK_WRITER_URL || localStorage.getItem('DECK_WRITER_URL');
-  if (override) bases.push(String(override).replace(/\/+$/, ''));
   const host = String(window.location.hostname || '').trim().toLowerCase();
-  const isLoopbackHost = host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0' || host === '::1' || host.endsWith('.local');
+  const isLoopbackHost = (value) => {
+    const h = String(value || '').trim().toLowerCase();
+    return h === 'localhost' || h === '127.0.0.1' || h === '0.0.0.0' || h === '::1' || h.endsWith('.local');
+  };
+  const pageIsLoopback = isLoopbackHost(host);
+  const isLoopbackUrl = (value) => {
+    try {
+      const parsed = new URL(String(value || '').trim());
+      return isLoopbackHost(parsed.hostname);
+    } catch {
+      return false;
+    }
+  };
+  const override = window.DECK_WRITER_URL || localStorage.getItem('DECK_WRITER_URL');
+  if (override) {
+    const normalizedOverride = String(override).replace(/\/+$/, '');
+    if (pageIsLoopback || !isLoopbackUrl(normalizedOverride)) {
+      bases.push(normalizedOverride);
+    }
+  }
   if (bases.length) return Array.from(new Set(bases.filter(Boolean)));
-  if (!isLoopbackHost) return [];
+  if (!pageIsLoopback) return [];
   const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
   if (host && host !== '0.0.0.0') bases.push(`${protocol}//${host}:8002`);
   bases.push(`${protocol}//127.0.0.1:8002`);
