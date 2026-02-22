@@ -1,0 +1,399 @@
+.home-dashboard {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+}
+
+.home-dashboard[hidden] {
+  display: none;
+}
+
+.home-dashboard-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  background: rgba(5, 9, 16, 0.54);
+  opacity: 0;
+  transition: opacity 0.22s ease;
+  cursor: default;
+}
+
+.home-dashboard-shell {
+  position: absolute;
+  top: 22px;
+  right: 22px;
+  bottom: 22px;
+  left: clamp(76px, 9vw, 136px);
+  border-radius: 24px;
+  border: 1px solid rgba(130, 172, 210, 0.2);
+  background:
+    radial-gradient(1200px 440px at -12% -22%, rgba(99, 197, 255, 0.14), transparent 64%),
+    radial-gradient(900px 520px at 112% -24%, rgba(110, 231, 183, 0.1), transparent 68%),
+    linear-gradient(165deg, rgba(17, 24, 36, 0.97), rgba(11, 17, 28, 0.98));
+  box-shadow: 0 36px 96px rgba(0, 0, 0, 0.48);
+  padding: 20px 22px 24px;
+  overflow: auto;
+  transform: translateY(14px) scale(0.985);
+  opacity: 0;
+  transition: transform 0.24s cubic-bezier(.22, 1, .36, 1), opacity 0.2s ease;
+}
+
+.home-dashboard.open .home-dashboard-backdrop {
+  opacity: 1;
+}
+
+.home-dashboard.open .home-dashboard-shell {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+.home-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.home-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font: 800 1rem/1 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: #f0f7ff;
+  background: linear-gradient(145deg, #5aa6ff, #6dd6c3);
+  box-shadow: 0 10px 24px rgba(31, 98, 177, 0.34);
+}
+
+.home-banner-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.home-kicker {
+  margin: 0 0 4px;
+  font: 700 0.68rem/1 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(200, 220, 240, 0.75);
+}
+
+.home-title {
+  margin: 0;
+  font: 800 1.35rem/1.18 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: #eef5ff;
+  letter-spacing: 0.01em;
+}
+
+.home-subtitle {
+  margin: 5px 0 0;
+  color: rgba(202, 220, 240, 0.76);
+  font: 500 0.9rem/1.35 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.home-close-btn {
+  border: 1px solid rgba(145, 169, 198, 0.42);
+  background: rgba(12, 20, 31, 0.72);
+  color: #d9e8fa;
+  border-radius: 10px;
+  padding: 7px 12px;
+  font: 700 0.79rem/1 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.home-close-btn:hover {
+  background: rgba(20, 32, 48, 0.88);
+}
+
+.home-stat-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.home-stat-pill {
+  border: 1px solid rgba(142, 166, 195, 0.24);
+  border-radius: 14px;
+  background: rgba(9, 15, 24, 0.64);
+  padding: 10px 12px;
+}
+
+.home-stat-label {
+  display: block;
+  margin-bottom: 7px;
+  color: rgba(188, 206, 226, 0.72);
+  font: 600 0.72rem/1 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.home-stat-value {
+  color: #f3f8ff;
+  font: 800 1.12rem/1 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  letter-spacing: 0.01em;
+}
+
+.home-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.home-card {
+  border: 1px solid rgba(143, 168, 199, 0.2);
+  border-radius: 16px;
+  background: rgba(11, 18, 30, 0.74);
+  padding: 12px;
+  min-width: 0;
+}
+
+.home-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.home-card h3 {
+  margin: 0;
+  font: 700 0.95rem/1.2 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: #eef5ff;
+  letter-spacing: 0.02em;
+}
+
+.home-card-head p {
+  margin: 0;
+  color: rgba(193, 210, 227, 0.76);
+  font: 600 0.74rem/1.2 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.home-activity-card {
+  grid-column: span 8;
+}
+
+.home-activity-grid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 11px;
+  grid-template-rows: repeat(7, 11px);
+  gap: 4px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.home-activity-cell {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  background: rgba(122, 143, 169, 0.2);
+  border: 1px solid rgba(173, 196, 220, 0.08);
+}
+
+.home-activity-cell.blank {
+  background: transparent;
+  border-color: transparent;
+}
+
+.home-activity-cell[data-level="1"],
+.home-legend-cell[data-level="1"] {
+  background: rgba(79, 179, 130, 0.35);
+}
+
+.home-activity-cell[data-level="2"],
+.home-legend-cell[data-level="2"] {
+  background: rgba(75, 195, 140, 0.57);
+}
+
+.home-activity-cell[data-level="3"],
+.home-legend-cell[data-level="3"] {
+  background: rgba(90, 218, 160, 0.8);
+}
+
+.home-activity-cell[data-level="4"],
+.home-legend-cell[data-level="4"] {
+  background: rgba(127, 246, 186, 0.95);
+}
+
+.home-activity-legend {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: rgba(185, 205, 224, 0.72);
+  font: 600 0.68rem/1 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  letter-spacing: 0.02em;
+}
+
+.home-legend-cell {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  background: rgba(122, 143, 169, 0.2);
+  border: 1px solid rgba(173, 196, 220, 0.08);
+}
+
+.home-kpi-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 9px;
+}
+
+.home-kpi-list li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  color: rgba(198, 214, 232, 0.84);
+  font: 600 0.86rem/1.25 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.home-kpi-list strong {
+  color: #eff6ff;
+  font: 800 0.96rem/1.1 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.home-deck-breakdown-card {
+  grid-column: span 5;
+}
+
+.home-deck-breakdown {
+  display: grid;
+  gap: 9px;
+  max-height: 228px;
+  overflow: auto;
+  padding-right: 3px;
+}
+
+.home-deck-row {
+  border: 1px solid rgba(139, 166, 197, 0.2);
+  border-radius: 12px;
+  padding: 8px;
+  background: rgba(9, 15, 25, 0.65);
+}
+
+.home-deck-row-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.home-deck-name {
+  color: #e8f2ff;
+  font: 700 0.79rem/1.2 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.home-deck-meta {
+  color: rgba(188, 207, 228, 0.74);
+  font: 600 0.68rem/1.2 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  letter-spacing: 0.02em;
+}
+
+.home-meter {
+  height: 6px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(136, 157, 181, 0.2);
+}
+
+.home-meter + .home-meter {
+  margin-top: 4px;
+}
+
+.home-meter-fill {
+  height: 100%;
+  border-radius: inherit;
+}
+
+.home-meter-fill.learned {
+  background: linear-gradient(90deg, rgba(84, 210, 160, 0.85), rgba(134, 247, 196, 0.95));
+}
+
+.home-meter-fill.due {
+  background: linear-gradient(90deg, rgba(99, 197, 255, 0.86), rgba(143, 216, 255, 0.98));
+}
+
+.home-progress-track {
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(132, 156, 184, 0.24);
+  border: 1px solid rgba(142, 169, 199, 0.3);
+}
+
+.home-progress-fill {
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #63c5ff, #7ce7c4);
+  transition: width 0.24s ease;
+}
+
+.home-card-note {
+  margin: 8px 0 0;
+  color: rgba(193, 210, 227, 0.78);
+  font: 500 0.8rem/1.35 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.home-forecast-list,
+.home-suggestions-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.home-forecast-item,
+.home-suggestion-item {
+  border: 1px solid rgba(138, 165, 195, 0.18);
+  border-radius: 10px;
+  padding: 7px 8px;
+  color: rgba(198, 215, 233, 0.88);
+  background: rgba(8, 13, 22, 0.62);
+  font: 600 0.78rem/1.3 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.home-empty {
+  border: 1px dashed rgba(140, 165, 194, 0.35);
+  border-radius: 10px;
+  padding: 10px;
+  color: rgba(192, 209, 226, 0.75);
+  font: 600 0.76rem/1.3 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+@media (max-width: 980px) {
+  .home-dashboard-shell {
+    left: 14px;
+    right: 14px;
+    top: 14px;
+    bottom: 14px;
+    padding: 14px;
+  }
+
+  .home-stat-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .home-activity-card,
+  .home-deck-breakdown-card,
+  .home-card {
+    grid-column: span 12;
+  }
+}

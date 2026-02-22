@@ -1,0 +1,203 @@
+/* ���"� MCQ GRID (PANELS) ���"�������������������������������������������������������������������������������������������������������������������� */
+.options {
+  position: absolute;
+  left: 50%;
+  width: min(var(--layout-card-max, 820px), 92vw);
+  z-index: 120;          /* sit above the flashcard so the top row isn't clipped */
+  box-sizing: border-box; /* include padding in width to avoid overflow/shift */
+
+  display: none;         /* remove from layout */
+  opacity: 0;            /* invisible */
+  pointer-events: none;  /* non-interactive */
+
+  transform: translateX(-50%);
+  transition: top 220ms ease;
+  /* Performance: avoid layout/paint cost when hidden */
+  content-visibility: auto;
+  contain-intrinsic-size: 0 400px;
+}
+
+.options.visible {
+  display: grid;         /* now in layout */
+  gap: 18px;
+  /* Force a 2x2 layout for four-choice MCQs */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: var(--mcq-row-height, minmax(calc(var(--mcq-btn-height, 68px) + var(--mcq-btn-depth, 10px)), auto));
+
+  /* Prevent the grid from being cut off on small viewports */
+  max-height: 40vh;
+  overflow: auto;
+  /* Give room for focus/hover/answer outlines so they don't get clipped */
+  padding: 14px 14px calc(14px + var(--mcq-btn-depth, 10px)); /* expanded margin to prevent clipping */
+
+  opacity: 1;
+  pointer-events: auto;
+
+  transform: translateX(-50%);
+}
+
+/* ���"� FLAT ANSWER BUTTONS ���"������������������������������������������������������������������������������������������������������������������ */
+.option-btn {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: var(--mcq-row-height, auto); /* stretch to uniform row height */
+  min-height: calc(var(--mcq-btn-height, 68px) + var(--mcq-btn-depth, 10px));
+  padding: 0 0 var(--mcq-btn-depth, 10px);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--mcq-text, #f4f6f8);
+  letter-spacing: var(--card-letter-spacing, var(--letter-spacing));
+  font-weight: 400;
+  transform-style: preserve-3d;
+  --mcq-top: var(--mcq-top-neutral, #6c6c6c);
+  --mcq-bottom: var(--mcq-bottom-neutral, #5d5d5d);
+  --mcq-side: var(--mcq-side-neutral, #3b3b3b);
+  --mcq-radius: var(--mcq-btn-radius, 14px);
+  --mcq-depth: var(--mcq-btn-depth, 10px);
+}
+
+.option-btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: calc(100% - var(--mcq-btn-depth, 10px));
+  border-radius: var(--mcq-radius);
+  background: var(--mcq-side);
+  transform: translateY(var(--mcq-depth));
+  filter: brightness(0.78);
+  transition: filter 0.18s ease;
+  pointer-events: none;
+}
+
+.btn-face {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  min-height: var(--mcq-btn-height, 68px);
+  display: grid;
+  place-items: center;
+  padding: 14px 18px;
+  font-size: clamp(.9rem, 1vw + .65rem, 1.06rem);
+  line-height: 1.25;
+  font-weight: inherit;
+  color: var(--mcq-text, #f4f6f8);
+  background: linear-gradient(to bottom, var(--mcq-top), var(--mcq-bottom));
+  height: calc(100% - var(--mcq-btn-depth, 10px)); /* fill the row, leaving depth for the base */
+  border-radius: var(--mcq-radius);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.38);
+  transform: translateY(var(--mcq-lift, 0));
+  transition: transform 0.18s cubic-bezier(0.25, 0.8, 0.4, 1),
+              filter 0.16s ease,
+              box-shadow 0.18s ease;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: center;
+  pointer-events: none;
+}
+
+.option-btn:hover .btn-face {
+  filter: none;
+}
+
+.option-btn.pressing .btn-face {
+  transform: translateY(calc(var(--mcq-depth)));
+  transition: transform 0.12s cubic-bezier(0.33, 1, 0.68, 1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.42);
+}
+
+.option-btn:focus,
+.option-btn:focus-visible { outline: none; }
+
+.option-btn:focus-visible .btn-face {
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.45), 0 0 0 2px rgba(255, 255, 255, 0.18);
+}
+
+.state-neutral {
+  --mcq-top: var(--mcq-top-neutral, #6b6f78);
+  --mcq-bottom: var(--mcq-bottom-neutral, #585c63);
+  --mcq-side: var(--mcq-side-neutral, #585c63);
+}
+
+.state-correct {
+  --mcq-top: var(--mcq-top-correct, #55c977);
+  --mcq-bottom: var(--mcq-bottom-correct, #39995a);
+  --mcq-side: var(--mcq-side-correct, #39995a);
+}
+
+.state-wrong {
+  --mcq-top: var(--mcq-top-wrong, #d16a6a);
+  --mcq-bottom: var(--mcq-bottom-wrong, #a64444);
+  --mcq-side: var(--mcq-side-wrong, #a64444);
+}
+
+.state-correct .btn-face {
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.38);
+}
+
+.state-wrong .btn-face {
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.38);
+}
+
+.btn-face.correct,
+.btn-face.incorrect {
+  /* keep base palette; hover-only brightening handled via hover rule */
+}
+
+.btn-face.incorrect {
+  filter: brightness(0.7) saturate(0.82);
+}
+
+.option-btn.state-neutral:hover .btn-face {
+  --mcq-top: var(--mcq-top-neutral-hover, #76808a);
+}
+
+.option-btn.state-correct:hover .btn-face {
+  --mcq-top: var(--mcq-top-correct-hover, #62d585);
+}
+
+.option-btn.state-wrong:hover .btn-face {
+  --mcq-top: var(--mcq-top-wrong-hover, #dd7777);
+}
+
+.option-btn.state-neutral.pressing .btn-face {
+  --mcq-top: var(--mcq-top-neutral-pressed, #4b4f55);
+}
+
+.option-btn.state-correct.pressing .btn-face {
+  --mcq-top: var(--mcq-top-correct-pressed, #2f7d49);
+}
+
+.option-btn.state-wrong.pressing .btn-face {
+  --mcq-top: var(--mcq-top-wrong-pressed, #7c2c2c);
+}
+
+/* On very narrow screens, allow stacking to a single column */
+@media (max-width: 540px) {
+  .options.visible {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* ���"� FULLSCREEN OVERRIDES FOR MCQ ���"�������������������������������������������������������������������������������������������������������� */
+#flashcard-frame.fullscreen-split .options {
+  left: 75vw !important;
+  transform: translateX(-50%) !important;
+  right: auto;
+  width: var(--fullscreen-split-panel-width, min(36vw, 520px));
+  /* In fullscreen, ensure long lists can scroll */
+  max-height: 80vh;
+  overflow: auto;
+  /* Also keep breathing room around button outlines */
+  padding: 12px 12px calc(12px + var(--mcq-btn-depth, 10px));
+}
+#flashcard-frame.fullscreen-split .options.animating-in {
+  animation: fly-in-right  0.5s ease-out  forwards;
+}
+#flashcard-frame.fullscreen-split .options.animating-out {
+  animation: fly-out-right 0.4s ease-in   forwards;
+}

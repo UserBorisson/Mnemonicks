@@ -1,0 +1,105 @@
+/* 卿ｫ卿ｫ FILL-IN TEXTBOX (PANELS) 卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ */
+.fillin {
+  position: absolute;
+  left: 50%;
+  width: min(var(--layout-card-max, 820px), 92vw);
+  box-sizing: border-box; /* include padding in width for alignment with flashcard */
+
+  display: none;         /* remove from layout */
+  opacity: 0;            /* invisible */
+  pointer-events: none;  /* non-interactive */
+
+  transform: translateX(-50%);
+  transition: top 220ms ease;
+  /* Performance: avoid layout/paint cost when hidden */
+  content-visibility: auto;
+  contain-intrinsic-size: 0 120px;
+}
+
+.fillin.visible {
+  display: flex;         /* now in layout */
+  justify-content: center;
+
+  opacity: 1;
+  pointer-events: auto;
+
+  transform: translateX(-50%);
+  padding: 12px; /* match MCQ breathing room to avoid clipping */
+}
+
+/* 卿ｫ卿ｫ TEXT INPUT STYLING 卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ */
+.answer-input {
+  min-width: 40%;
+  max-width: 100%;
+  padding: 14px 12px;
+  font-size: 1.2rem; /* slightly larger typing */
+  /* inherit browser default font */
+  letter-spacing: var(--card-letter-spacing, var(--letter-spacing));
+  color: var(--text-primary);
+  background: var(--elevated-color);
+  border: 0 solid var(--btn-front);
+  border-radius: 12px;
+  text-align: center;
+  transition: filter .15s;
+  box-sizing: border-box;
+  outline-offset: 4px;
+}
+
+.answer-input:not(.correct):not(.incorrect):not(.correct-final):focus {
+  outline: 1px solid white;
+  filter: brightness(1.15);
+  border-color: var(--btn-face);
+}
+
+.answer-input:hover:not(.correct):not(.incorrect):not(.correct-final) {
+  filter: brightness(1.15);
+  outline: 1px solid white;
+}
+
+.answer-input.correct {
+  outline: 2px solid var(--btn-correct);
+  animation: answer-correct 1.4s ease-out forwards;
+}
+
+.answer-input.incorrect {
+  outline: 2px solid var(--btn-incorrect);
+  animation: answer-incorrect 1.4s ease-out forwards;
+}
+
+.answer-input.correct-final {
+  outline: 2px solid var(--btn-correct);
+  filter: brightness(1.15);
+  animation: answer-correct-final 1.4s ease-out;
+}
+
+@keyframes answer-correct {
+  0%   { outline-color: var(--btn-correct); box-shadow: 0 0 0 0 var(--btn-correct); filter: brightness(1); }
+  40%  { outline-color: var(--btn-correct); box-shadow: 0 0 0 8px var(--btn-correct); filter: brightness(1.15); }
+  100% { outline-color: white; box-shadow: 0 0 0 0 transparent; filter: brightness(1); }
+}
+
+@keyframes answer-incorrect {
+  0%   { outline-color: var(--btn-incorrect); box-shadow: 0 0 0 0 var(--btn-incorrect); filter: brightness(1) saturate(1); }
+  40%  { outline-color: var(--btn-incorrect); box-shadow: 0 0 0 8px var(--btn-incorrect); filter: brightness(0.9) saturate(0.8); }
+  100% { outline-color: white; box-shadow: 0 0 0 0 transparent; filter: brightness(1) saturate(1); }
+}
+
+@keyframes answer-correct-final {
+  0%   { outline-color: var(--btn-correct); box-shadow: 0 0 0 0 var(--btn-correct); filter: brightness(1); }
+  40%  { outline-color: var(--btn-correct); box-shadow: 0 0 0 8px var(--btn-correct); filter: brightness(1.15); }
+  100% { outline-color: var(--btn-correct); box-shadow: 0 0 0 0 transparent; filter: brightness(1.15); }
+}
+
+/* 卿ｫ卿ｫ FULLSCREEN OVERRIDES FOR FILL-IN 卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ卿ｫ */
+#flashcard-frame.fullscreen-split .fillin {
+  left: 75vw !important;
+  transform: translateX(-50%) !important;
+  right: auto;
+  width: var(--fullscreen-split-panel-width, min(36vw, 520px));
+}
+#flashcard-frame.fullscreen-split .fillin.animating-in {
+  animation: fly-in-right  0.5s ease-out  forwards;
+}
+#flashcard-frame.fullscreen-split .fillin.animating-out {
+  animation: fly-out-right 0.4s ease-in   forwards;
+}

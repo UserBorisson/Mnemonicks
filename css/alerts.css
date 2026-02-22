@@ -1,0 +1,138 @@
+/* Alerts (stacked) — opaque dark theme */
+@charset "UTF-8";
+
+/* ==== Theme tokens (opaque) ==== */
+:root{
+  --alert-width: clamp(280px, 92vw, 560px);
+  --alert-height: 96px;
+  --alert-radius: 16px;
+  --alert-icon-radius: 12px;
+
+  /* card + tile */
+  --alert-card-bg: #1a1a1a;     /* darker background */
+  --alert-card-border: #2a2a2a;
+  --alert-tile-bg: #2a2a2a;     /* tile + hover for X */
+
+  /* text */
+  --alert-title-color: #e8e8ea;
+  --alert-desc-color: #a9a9b2;
+
+  /* variant accents */
+  --alert-success-fg: #17b26a;
+  --alert-warning-fg: #c69100;
+  --alert-error-fg:   #e5484d;
+  --alert-info-fg:    #6e59f0;
+}
+
+/* Optional fixed stack */
+.alert-stack{
+  position: fixed;
+  inset: 16px 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: var(--alert-width);
+  margin: 0 auto;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+/* ==== Card ==== */
+.alert{
+  /* shared accent used by BOTH icon and close X (overridden per variant) */
+  --alert-accent: #e5e7eb;
+
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: var(--alert-height);
+  padding: 20px 24px;
+  width: 100%;
+  border-radius: var(--alert-radius);
+  background: var(--alert-card-bg);
+  border: 1px solid var(--alert-card-border);
+  box-shadow: none;
+  transition: opacity .45s cubic-bezier(.22,.61,.36,1), filter .45s cubic-bezier(.22,.61,.36,1);
+  pointer-events: auto;
+}
+
+/* Fade-out */
+.alert.fade-out{ opacity: 0; filter: blur(8px); }
+
+/* Icon tile */
+.alert .iconbox{
+  width: 48px;
+  height: 48px;
+  border-radius: var(--alert-icon-radius);
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  background: var(--alert-tile-bg);
+  color: var(--alert-accent); /* icon color = accent */
+}
+.alert .iconbox svg{
+  width: 22px; height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Content */
+.alert .content{ flex: 1 1 auto; min-width: 0; }
+.alert .title{
+  margin: 0; font-size: 17px; font-weight: 600;
+  color: var(--alert-title-color);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.alert .desc{
+  margin: 4px 0 0; font-size: 14px;
+  color: var(--alert-desc-color);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* Close button (X) — renamed to avoid global .close collisions */
+.alert .alert-close{
+  margin-left: auto;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  inline-size: 36px;
+  block-size: 36px;
+  border-radius: 8px;
+  color: var(--alert-accent);            /* X color = accent */
+}
+.alert .alert-close svg{
+  width: 20px; height: 20px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+}
+.alert .alert-close:hover,
+.alert .alert-close:focus-visible{
+  background: var(--alert-tile-bg);      /* hover uses tile color */
+}
+
+/* ==== Variants set the shared accent ==== */
+.alert.success { --alert-accent: var(--alert-success-fg); }
+.alert.warning { --alert-accent: var(--alert-warning-fg); }
+.alert.error   { --alert-accent: var(--alert-error-fg); }
+.alert.info    { --alert-accent: var(--alert-info-fg); }
+
+/* Keep single dark card for all variants */
+.alert.success,
+.alert.warning,
+.alert.error,
+.alert.info{
+  background: var(--alert-card-bg);
+  border-color: var(--alert-card-border);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce){
+  .alert{ transition: opacity .2s linear; }
+  .alert.fade-out{ filter: none; }
+}

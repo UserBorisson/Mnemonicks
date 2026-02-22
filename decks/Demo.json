@@ -1,0 +1,262 @@
+[
+  {
+    "id": "showcase_vocab_cs_arteria_ae_f",
+    "front": "artēria, <<!ae, f.!>>",
+    "back": "tepna",
+    "correct": [
+      "tepna"
+    ],
+    "lang": {
+      "front": "la",
+      "back": "cs"
+    },
+    "tags": [
+      "showcase",
+      "vocab",
+      "la_to_cs"
+    ]
+  },
+  {
+    "id": "showcase_vocab_cs_axilla_ae_f",
+    "front": "axilla, <<!ae, f.!>>",
+    "back": "podpaží",
+    "correct": [
+      "podpaží"
+    ],
+    "lang": {
+      "front": "la",
+      "back": "cs"
+    },
+    "tags": [
+      "showcase",
+      "vocab",
+      "la_to_cs"
+    ]
+  },
+  {
+    "id": "showcase_vocab_en_aorta_ae_f",
+    "front": "aorta, <<!ae, f.!>>",
+    "back": "aorta",
+    "correct": [
+      "aorta"
+    ],
+    "lang": {
+      "front": "la",
+      "back": "en"
+    },
+    "tags": [
+      "showcase",
+      "vocab",
+      "la_to_en"
+    ]
+  },
+  {
+    "id": "showcase_vocab_en_arachnoidea_ae_f",
+    "front": "arachnoidea, <<!ae, f.!>>",
+    "back": "arachnoid membrane",
+    "correct": [
+      "arachnoid membrane"
+    ],
+    "lang": {
+      "front": "la",
+      "back": "en"
+    },
+    "tags": [
+      "showcase",
+      "vocab",
+      "la_to_en"
+    ]
+  },
+  {
+    "id": "showcase_conj_2w_fractura_pollex",
+    "front": "frāctūra, <<!ae, f.!>>\npollex, <<!icis, m.!>>",
+    "back": "frāctūra pollicis",
+    "correct": [
+      "frāctūra pollicis"
+    ],
+    "lang": {
+      "front": "la",
+      "back": "la"
+    },
+    "tags": [
+      "showcase",
+      "conjugation",
+      "2_words"
+    ]
+  },
+  {
+    "id": "showcase_conj_2w_laesio_cartilago",
+    "front": "laesiō, <<!ōnis, f.!>>\ncartilāgō, <<!inis, f.!>>",
+    "back": "laesiō cartilāginis",
+    "correct": [
+      "laesiō cartilāginis"
+    ],
+    "lang": {
+      "front": "la",
+      "back": "la"
+    },
+    "tags": [
+      "showcase",
+      "conjugation",
+      "2_words"
+    ]
+  },
+  {
+    "id": "showcase_conj_3w_ruptura_musculus_adductor",
+    "front": "ruptūra, <<!ae, f.!>>\nmūsculus, <<!ī, m.!>>\nadductor, <<!ōris, m.!>>",
+    "back": "ruptūra mūsculī adductōris",
+    "correct": [
+      "ruptūra mūsculī adductoris"
+    ],
+    "lang": {
+      "front": "la",
+      "back": "la"
+    },
+    "tags": [
+      "showcase",
+      "conjugation",
+      "3_words"
+    ],
+    "__homeSource": {
+      "kind": "card",
+      "parentId": "showcase_conj_3w_ruptura_musculus_adductor"
+    }
+  },
+  {
+    "id": "showcase_conj_3w_laesio_apex_pulmo",
+    "front": "laesiō, <<!ōnis, f.!>>\napex, <<!icis, m.!>>\npulmō, <<!ōnis, m.!>>",
+    "back": "laesiō apicis pulmōnis",
+    "correct": [
+      "laesiō apicis pulmōnis"
+    ],
+    "lang": {
+      "front": "la",
+      "back": "la"
+    },
+    "tags": [
+      "showcase",
+      "conjugation",
+      "3_words"
+    ]
+  },
+  {
+    "id": "showcase_conj_4w_ruptura_tendo_musculus_abductor",
+    "front": "ruptūra, <<!ae, f.!>>\ntendō, <<!inis, m.!>>\nmūsculus, <<!ī, m.!>>\nabductor, <<!ōris, m.!>>",
+    "back": "ruptūra tendinis mūsculī abductōris",
+    "correct": [
+      "ruptūra tendinis mūsculī abductoris"
+    ],
+    "lang": {
+      "front": "la",
+      "back": "la"
+    },
+    "tags": [
+      "showcase",
+      "conjugation",
+      "4_words"
+    ],
+    "__homeSource": {
+      "kind": "card",
+      "parentId": "showcase_conj_4w_ruptura_tendo_musculus_abductor"
+    }
+  },
+  {
+    "id": "showcase_conj_4w_musculus_abductor_pollicis_longus",
+    "front": "mūsculus, <<!ī, m.!>>\nabductor, <<!ōris, m.!>>\npollex, <<!icis, m.!>>\nlongus, <<!a, um!>>",
+    "back": "mūsculus abductor pollicis longus",
+    "correct": [
+      "mūsculus abductor pollicis longus"
+    ],
+    "lang": {
+      "front": "la",
+      "back": "la"
+    },
+    "tags": [
+      "showcase",
+      "conjugation",
+      "4_words"
+    ]
+  },
+  {
+    "id": "showcase_conj_5w_fractura_phalanx_media_digitus_minimus",
+    "front": "frāctūra, <<!ae, f.!>>\nphalanx, <<!ngis, f.!>>\nmedius, <<!a, um!>>\ndigitus, <<!ī, m.!>>\nminimus, <<!a, um!>>",
+    "back": "frāctūra phalangis mediae digitī minimī",
+    "correct": [
+      "frāctūra phalangis mediae digitī minimī"
+    ],
+    "lang": {
+      "front": "la",
+      "back": "la"
+    },
+    "tags": [
+      "showcase",
+      "conjugation",
+      "5_words"
+    ]
+  },
+  {
+    "id": "showcase_conj_5w_insertiones_musculorum_levatorum_costarum_longorum",
+    "front": "īnsertiōnēs <<!(īnsertiō, ōnis, f.)!>>\nmūsculus, <<!ī, m.!>>\nlevātor, <<!ōris, m.!>>\ncosta, <<!ae, f.!>>\nlongus, <<!a, um!>>",
+    "back": "īnsertiōnēs mūsculōrum levātōrum costārum longōrum",
+    "correct": [
+      "īnsertiōnēs mūsculōrum levātōrum costārum longōrum"
+    ],
+    "lang": {
+      "front": "la",
+      "back": "la"
+    },
+    "tags": [
+      "showcase",
+      "conjugation",
+      "5_words"
+    ]
+  },
+  {
+    "id": "demo_mlwjc8lp_2y4gcp",
+    "front": "genū, <<!ūs, n.!>>",
+    "back": "knee",
+    "correct": [
+      "knee"
+    ],
+    "lang": {
+      "front": "la",
+      "back": "en"
+    }
+  },
+  {
+    "id": "demo_mlwjdc8d_0l2dms",
+    "front": "hallūx, <<!ūcis, m.!>>",
+    "back": "big toe",
+    "correct": [
+      "big toe"
+    ],
+    "lang": {
+      "front": "la",
+      "back": "en"
+    }
+  },
+  {
+    "id": "demo_mlwjig61_tdurhu",
+    "front": "palātum, <<!ī, n.!>>\ndurus, <<!a, um!>>",
+    "back": "palātum durum",
+    "correct": [
+      "palātum durum"
+    ],
+    "lang": {
+      "front": "la",
+      "back": "la"
+    }
+  },
+  {
+    "id": "demo_mlwpui33_9yoxw7",
+    "front": "glōttis, idis, f.",
+    "back": "hlasivka",
+    "correct": [
+      "hlasivka"
+    ],
+    "lang": {
+      "front": "la",
+      "back": "cs"
+    }
+  }
+]

@@ -1,0 +1,1041 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Anki-Lite Modular</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2300bcd4'/%3E%3Cpath d='M8 23l8-14 8 14' stroke='%23fff' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+  <script src="https://unpkg.com/lottie-web@5.12.2/build/player/lottie.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+  <script defer src="node_modules/dompurify/dist/purify.min.js"></script>
+
+  <!-- Streak flame styles (scoped) -->
+  <style>
+    :root {
+      --flame-number-offset: 16px;
+    }
+
+    .mode-dropdown { position: relative; }
+    .combo-meter .combo-halo { display: none; }
+
+    .flame-scale-wrapper {
+      display: inline-block;
+      transition: transform 0.25s cubic-bezier(0.22, 0.61, 0.36, 1);
+      transform-origin: center;
+      --flame-shadow-blur: 4px;
+    }
+
+    .flame-wrapper {
+      position: relative;
+      width: 80px;
+      height: 80px;
+    }
+
+    .fire-player {
+      width: 100%;
+      height: 100%;
+      display: block;
+      filter: drop-shadow(0 0 var(--flame-shadow-blur) rgba(255, 70, 70, 0.45));
+    }
+
+    .combo-number {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      pointer-events: none;
+      transform: translate3d(1px, var(--flame-number-offset), 0);
+    }
+
+    .combo-digit-svg {
+      width: 60%;
+      height: 60%;
+      overflow: visible;
+    }
+
+    .combo-digit-svg text {
+      letter-spacing: 0;
+      font-kerning: normal;
+      text-rendering: geometricPrecision;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .combo-digit-svg .highlight-bar {
+      fill: #ffffff;
+      fill-opacity: 0.9;
+      transform-origin: 50px 50px;
+      transform-box: view-box;
+      animation: rect-highlight-swipe 2.6s ease-in-out infinite;
+    }
+
+    @keyframes rect-highlight-swipe {
+      0% {
+        transform: rotate(35deg) translateX(-120px);
+        opacity: 0;
+      }
+      20% { opacity: 0; }
+      35% { opacity: 1; }
+      80% {
+        transform: rotate(35deg) translateX(120px);
+        opacity: 1;
+      }
+      100% {
+        transform: rotate(35deg) translateX(120px);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body class="mode-flashcard">
+  <aside class="left-hover-menu" aria-label="Modes and settings">
+    <div class="left-hover-hitbox" aria-hidden="true"></div>
+    <div class="left-hover-panel">
+      <section class="rail-group rail-home" aria-label="Home">
+        <button id="railHomeBtn" class="mode-trigger home-trigger" type="button">
+          <span class="mode-trigger-main">
+            <span class="mode-trigger-icon" aria-hidden="true">
+              <svg class="icon-home" viewBox="0 0 16 16" aria-hidden="true">
+                <path fill="currentColor" d="M6.5 14.5v-3.5a1.5 1.5 0 0 1 3 0v3.5a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5V7.732a.5.5 0 0 0-.146-.353l-6-6a.5.5 0 0 0-.708 0l-6 6A.5.5 0 0 0 2 7.732V14.5a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5"/>
+              </svg>
+            </span>
+            <span class="mode-trigger-label">Home</span>
+          </span>
+        </button>
+      </section>
+
+      <!-- Mode dropdown -->
+      <nav class="tabs mode-dropdown" aria-label="Modes">
+        <button class="mode-trigger" type="button" aria-haspopup="true" aria-expanded="false">
+          <span class="mode-trigger-main">
+            <span class="mode-trigger-icon" aria-hidden="true">
+             <svg viewBox="0 0 16 16" aria-hidden="true">
+               <rect x="1" y="3" width="13" height="10" rx="3" fill="currentColor"></rect>
+             </svg>
+            </span>
+            <span class="mode-trigger-label">Flashcard</span>
+          </span>
+          <span class="mode-trigger-chevron" aria-hidden="true">
+            <svg viewBox="0 0 20 20">
+              <path d="M5 7.5 10 12l5-4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+          </span>
+        </button>
+        <div class="mode-menu" role="menu" hidden>
+          <div class="mode-menu-list">
+            <button class="tab-btn active" data-tab="flashcard" role="menuitemradio" aria-checked="true" data-label="Flashcard" data-accent="#63c5ff">
+               <span class="tab-icon" aria-hidden="true">
+                <svg viewBox="0 0 16 16">
+                  <rect x="1" y="3" width="13" height="10" rx="3" fill="currentColor"></rect>
+                </svg>
+              </span>
+              <span class="tab-text">Flashcard</span>
+            </button>
+            <button class="tab-btn" data-tab="mcq" role="menuitemradio" aria-checked="false" data-label="MCQ" data-accent="#9d8bff">
+              <span class="tab-icon" aria-hidden="true">
+                <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                  <path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5zm8 0A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5zm-8 8A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5zm8 0A1.5 1.5 0 0 1 10.5 9h3a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-3A1.5 1.5 0 0 1 9 13.5z"/>
+                </svg>
+              </span>
+              <span class="tab-text">MCQ</span>
+            </button>
+            <button class="tab-btn" data-tab="fillin" role="menuitemradio" aria-checked="false" data-label="Fill" data-accent="#6ee7b7">
+              <span class="tab-icon" aria-hidden="true">
+                <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                  <path fill-rule="evenodd" d="M5 2a.5.5 0 0 1 .5-.5c.862 0 1.573.287 2.06.566.174.099.321.198.44.286.119-.088.266-.187.44-.286A4.17 4.17 0 0 1 10.5 1.5a.5.5 0 0 1 0 1c-.638 0-1.177.213-1.564.434a3.5 3.5 0 0 0-.436.294V7.5H9a.5.5 0 0 1 0 1h-.5v4.272c.1.08.248.187.436.294.387.221.926.434 1.564.434a.5.5 0 0 1 0 1 4.17 4.17 0 0 1-2.06-.566A5 5 0 0 1 8 13.65a5 5 0 0 1-.44.285 4.17 4.17 0 0 1-2.06.566.5.5 0 0 1 0-1c.638 0 1.177-.213 1.564-.434.188-.107.335-.214.436-.294V8.5H7a.5.5 0 0 1 0-1h.5V3.228a3.5 3.5 0 0 0-.436-.294A3.17 3.17 0 0 0 5.5 2.5.5.5 0 0 1 5 2"/>
+                  <path d="M10 5h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1h-4v1h4a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-4zM6 5V4H2a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4v-1H2a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/>
+                </svg>
+              </span>
+              <span class="tab-text">Fill</span>
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      <section class="rail-group deck-dropdown" aria-label="Deck selection">
+        <button id="railDeckTrigger" class="mode-trigger deck-trigger" type="button" aria-haspopup="true" aria-expanded="false">
+          <span class="mode-trigger-main">
+            <span class="mode-trigger-icon" aria-hidden="true">
+              <svg class="icon-decks" data-src="icons/app/inboxes-fill.svg" aria-hidden="true"></svg>
+            </span>
+            <span class="mode-trigger-label">Decks</span>
+          </span>
+          <span class="mode-trigger-chevron" aria-hidden="true">
+            <svg viewBox="0 0 20 20">
+              <path d="M5 7.5 10 12l5-4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+          </span>
+        </button>
+        <div id="railDeckMenu" class="deck-menu" role="menu" hidden aria-hidden="true">
+          <div id="railDeckRecents" class="deck-menu-recents" role="listbox" aria-label="Recent decks"></div>
+          <label class="deck-menu-search-label" for="railDeckSearch">Search deck</label>
+          <div class="deck-menu-search-shell">
+            <span id="railDeckGhost" class="deck-menu-search-ghost" aria-hidden="true"></span>
+            <input id="railDeckSearch" class="deck-menu-search-input" type="text" placeholder="Type deck name and press Enter" spellcheck="false" autocapitalize="none" autocomplete="off" />
+          </div>
+        </div>
+      </section>
+
+      <div class="floating-settings">
+        <button class="settings-btn rail-settings-btn" aria-label="Open settings" onclick="event.stopPropagation()">
+          <svg class="icon-gear" data-src="icons/app/gear-wide-connected.svg" aria-hidden="true"></svg>
+          <span class="rail-item-label">Settings</span>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- SVG ICON SPRITES (stars only) -->
+  <svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
+    <symbol id="i-star-empty" viewBox="0 0 16 16">
+      <path fill="currentColor" d="M2.866 14.85c-.078.444.36.791.746.593l4.39-2.256 4.389 2.256c.386.198.824-.149.746-.592l-.83-4.73 3.522-3.356c.33-.314.16-.888-.282-.95l-4.898-.696L8.465.792a.513.513 0 0 0-.927 0L5.354 5.12l-4.898.696c-.441.062-.612.636-.283.95l3.523 3.356-.83 4.73zm4.905-2.767-3.686 1.894.694-3.957a.56.56 0 0 0-.163-.505L1.71 6.745l4.052-.576a.53.53 0 0 0 .393-.288L8 2.223l1.847 3.658a.53.53 0 0 0 .393.288l4.052.575-2.906 2.77a.56.56 0 0 0-.163.506l.694 3.957-3.686-1.894z"/>
+    </symbol>
+    <symbol id="i-star-fill" viewBox="0 0 16 16">
+      <path fill="currentColor" d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/>
+    </symbol>
+    <!-- - Correct Bootstrap star-half path (renders visibly half-filled) -->
+    <symbol id="i-star-half" viewBox="0 0 16 16">
+      <path fill="currentColor" d="M5.354 5.119 7.538.792A.52.52 0 0 1 8 .5c.183 0 .366.097.465.292l2.184 4.327 4.898.696A.54.54 0 0 1 16 6.32a.55.55 0 0 1-.17.445l-3.523 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256a.5.5 0 0 1-.146.05c-.342.06-.668-.254-.6-.642l.83-4.73L.173 6.765a.55.55 0 0 1-.172-.403.6.6 0 0 1 .085-.302.51.51 0 0 1 .37-.245zM8 12.027a.5.5 0 0 1 .232.056l3.686 1.894-.694-3.957a.56.56 0 0 1 .162-.505l2.907-2.77-4.052-.576a.53.53 0 0 1-.393-.288L8.001 2.223 8 2.226z"/>
+    </symbol>
+  </svg>
+
+  <!-- Flashcard container shared by all modes -->
+  <div id="flashcard-frame">
+
+    <div class="flashcard-toolbar-row">
+      <div class="flashcard-toolbar" aria-label="Flashcard controls">
+        <!-- Top-left learning stars (visual only) -->
+        <div class="top-left-controls" aria-hidden="true"></div>
+
+        <!-- Deck progress -->
+        <div class="deck-counter" aria-live="polite" aria-label="Due cards">
+          <span class="deck-counter-label">Due</span>
+          <span data-counter-due>0</span>
+        </div>
+
+        <div class="top-right-controls">
+          <div id="ttsLoading" class="tts-loading" aria-hidden="true">
+            <span id="ttsLoadingText" class="tts-loading-text">Loading</span>
+            <button id="ttsRetryBtn" class="tts-retry-btn" type="button" hidden>Retry</button>
+          </div>
+          <button class="audio-btn" type="button" aria-label="Turn TTS on" aria-pressed="false" data-tts="off">
+            <!-- ON icon -->
+            <span class="icon-on" hidden>
+              <svg class="bi bi-volume-up" data-src="icons/bootstrap/volume-up.svg" aria-hidden="true"></svg>
+            </span>
+            <!-- OFF icon -->
+            <span class="icon-off">
+              <svg class="bi bi-volume-mute" data-src="icons/bootstrap/volume-mute.svg" aria-hidden="true"></svg>
+            </span>
+          </button>
+
+          <button class="calc-btn" type="button" aria-label="Open local calculator" aria-pressed="false" data-calc="off" onclick="event.stopPropagation()">
+            <svg class="bi bi-calculator" data-src="icons/bootstrap/calculator.svg" aria-hidden="true"></svg>
+          </button>
+
+          <!-- NEW: Zoom mode toggle -->
+          <button class="zoom-btn" aria-label="Toggle zoom mode" aria-pressed="false" data-zoom="off" onclick="event.stopPropagation()">
+            <!-- placeholder that will be inlined from /icons -->
+            <svg class="icon-zoom" data-src="icons/app/zoom.svg" aria-hidden="true"></svg>
+          </button>
+
+          <!-- NEW: Hint (lightbulb) -->
+          <button class="hint-btn" aria-label="Show hint" onclick="event.stopPropagation()">
+            <svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 18h6" vector-effect="non-scaling-stroke"/>
+              <path d="M10 22h4" vector-effect="non-scaling-stroke"/>
+              <path d="M12 3a7 7 0 0 0-7 7c0 2.5 1.2 4 3 5.5.7.6 1 1 1 1.5h6c0-.5.3-.9 1-1.5 1.8-1.5 3-3 3-5.5a7 7 0 0 0-7-7Z" vector-effect="non-scaling-stroke"/>
+            </svg>
+          </button>
+
+          <!-- existing: Edit -->
+          <button class="edit-btn" aria-label="Edit card">
+            <svg class="bi bi-pencil-square" data-src="icons/bootstrap/pencil-square.svg" aria-hidden="true"></svg>
+          </button>
+
+          <!-- existing: Fullscreen -->
+          <button class="fullscreen-btn" aria-label="Toggle fullscreen">
+            <!-- placeholders that will be inlined from /icons -->
+            <svg class="icon-fullscreen" data-src="icons/app/fullscreen.svg" aria-hidden="true"></svg>
+            <svg class="icon-fullscreen-exit" data-src="icons/app/fullscreen-exit.svg" aria-hidden="true"></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Streak flame counter to the right of the toolbar -->
+      <div class="combo-meter" aria-hidden="true">
+        <div id="streak-flame" class="flame-scale-wrapper">
+          <div class="flame-wrapper">
+            <div id="fire-player" class="fire-player"></div>
+
+            <div class="combo-number">
+              <svg
+                id="combo-digit-svg"
+                class="combo-digit-svg"
+                viewBox="0 0 100 100"
+                preserveAspectRatio="xMidYMid meet"
+              >
+                <defs>
+                  <filter id="digit-shadow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feDropShadow dx="0" dy="0" stdDeviation="1.2"
+                                  flood-color="black" flood-opacity="0.75" />
+                    <feDropShadow dx="0" dy="0" stdDeviation="2.0"
+                                  flood-color="black" flood-opacity="0.45" />
+                  </filter>
+
+                  <clipPath id="digit-clip">
+                    <text
+                      id="digit-clip-text"
+                      x="50"
+                      y="50"
+                      text-anchor="middle"
+                      dominant-baseline="central"
+                      font-size="60"
+                      font-family="'Inter', 'Segoe UI', Arial, sans-serif"
+                      font-weight="800"
+                    >
+                      0
+                    </text>
+                  </clipPath>
+                </defs>
+
+                <text
+                  id="digit-main"
+                  x="50"
+                  y="50"
+                  text-anchor="middle"
+                  dominant-baseline="central"
+                  font-size="60"
+                  font-family="'Inter', 'Segoe UI', Arial, sans-serif"
+                  font-weight="800"
+                  fill="#f4f4f4"
+                  stroke="#111111"
+                  stroke-width="4"
+                  stroke-linejoin="round"
+                  paint-order="stroke fill"
+                >
+                  0
+                </text>
+
+                <g clip-path="url(#digit-clip)">
+                  <rect
+                    class="highlight-bar"
+                    x="40"
+                    y="-20"
+                    width="20"
+                    height="140"
+                  />
+                </g>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flashcard-stage">
+      <div class="study-lane">
+        <div class="flashcard">
+          <div class="flashcard__face flashcard__front">
+            <!-- front content -->
+          </div>
+          <div class="flashcard__face flashcard__back">
+            <!-- back content -->
+          </div>
+        </div>
+      </div>
+      <aside class="flashcard-editor-panel" aria-hidden="true" hidden>
+        <div class="editor-preview">
+          <div class="editor-preview-header">
+            <span class="editor-preview-label" data-editor-preview-label>Back preview</span>
+            <span class="editor-preview-sub">Opposite face</span>
+          </div>
+          <div class="editor-preview-card">
+            <div class="editor-preview-body" data-editor-preview-body></div>
+          </div>
+        </div>
+
+        <details class="editor-meta-details" data-editor-meta>
+          <summary>Card settings</summary>
+          <div class="editor-meta">
+            <div class="editor-field">
+              <label for="editorArchetype">Archetype</label>
+              <input id="editorArchetype" list="editorArchetypeList" placeholder="e.g., mcq" />
+            </div>
+            <div class="editor-field">
+              <label for="editorLangFront">Front language</label>
+              <input id="editorLangFront" list="editorLangList" placeholder="e.g., en" />
+            </div>
+            <div class="editor-field">
+              <label for="editorLangBack">Back language</label>
+              <input id="editorLangBack" list="editorLangList" placeholder="e.g., en" />
+            </div>
+          </div>
+          <datalist id="editorArchetypeList">
+            <option value="mcq"></option>
+            <option value="maths"></option>
+            <option value="flashcard"></option>
+            <option value="diagram"></option>
+          </datalist>
+          <datalist id="editorLangList">
+            <option value="en"></option>
+            <option value="cs"></option>
+            <option value="tr"></option>
+            <option value="la"></option>
+            <option value="de"></option>
+            <option value="fr"></option>
+            <option value="es"></option>
+            <option value="it"></option>
+            <option value="pt"></option>
+            <option value="ru"></option>
+            <option value="ja"></option>
+            <option value="zh"></option>
+            <option value="ko"></option>
+            <option value="el"></option>
+            <option value="pl"></option>
+          </datalist>
+        </details>
+
+        <div class="editor-answers">
+          <div class="editor-section-title">Correct answers</div>
+          <div id="editorCorrectList" class="answer-chip-list" aria-live="polite"></div>
+          <div class="add-row">
+            <input id="editorCorrectInput" placeholder="+ Add correct answer" />
+            <button id="editorCorrectAdd" type="button">Add</button>
+          </div>
+          <details class="editor-accept-details" data-editor-accept-details>
+            <summary>Accepted variants</summary>
+            <textarea id="editorAccept" rows="3" placeholder="Extra accepted answers"></textarea>
+          </details>
+        </div>
+
+        <div class="editor-actions">
+          <button type="button" class="editor-btn editor-new" data-editor-new>New</button>
+          <button type="button" class="editor-btn" data-editor-cancel>Cancel</button>
+          <button type="button" class="editor-btn primary" data-editor-save>Save</button>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Side navigation arrows -->
+    <button class="nav-btn prev-btn" id="prevBtn" aria-label="Previous card"></button>
+    <button class="nav-btn next-btn" id="nextBtn" aria-label="Next card"></button>
+
+    <!-- MCQ buttons (visible in MCQ mode only) -->
+    <div class="options" id="options"></div>
+
+    <!-- Fill-in input (visible in Fill-in mode only) -->
+    <div class="fillin" id="fillin">
+      <input type="text" class="answer-input"/>
+    </div>
+  </div>
+
+  <!-- Declension drill overlay -->
+  <script type="module" src="js/main.js?v=20260211"></script>
+
+  <!-- Settings panel -->
+  <div id="settingsPanel" class="settings-panel" aria-hidden="true">
+    <header class="settings-header">
+      <span class="settings-kicker">Control Center</span>
+      <h2 class="settings-title">Settings</h2>
+      <p class="settings-subtitle">Tune the study experience and manage decks without breaking focus.</p>
+    </header>
+    <div class="scroll-list-container">
+      <div class="top-gradient" aria-hidden="true"></div>
+      <ul class="settings-list scroll-list" role="menu">
+        <li class="settings-list-item">
+          <button id="btnLoadDeck" class="settings-item settings-card" type="button" role="menuitem">
+            <span class="settings-dot" aria-hidden="true"></span>
+            <span class="settings-text">
+              <span class="settings-label">Load Deck</span>
+              <span class="settings-description">Pick a deck from your collection.</span>
+            </span>
+            <span class="settings-action" aria-hidden="true">
+              <svg viewBox="0 0 20 20" aria-hidden="true">
+                <path d="M7 4l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </span>
+          </button>
+          <div id="deckChooser" class="deck-chooser settings-subpanel" hidden>
+            <input id="deckSearch" class="deck-search" type="text" placeholder="Filter decks" />
+            <div id="deckList" class="deck-list" role="listbox" aria-label="Available decks"></div>
+          </div>
+        </li>
+        <li class="settings-list-item">
+          <button id="btnLatinSettings" class="settings-item settings-card" type="button" aria-controls="latinSettings" aria-expanded="false" role="menuitem">
+            <span class="settings-dot" aria-hidden="true"></span>
+            <span class="settings-text">
+              <span class="settings-label">Latin Drill Mode</span>
+              <span class="settings-description">Choose which drills and declensions to practice.</span>
+            </span>
+            <span class="settings-chip" data-state="closed">N/A</span>
+          </button>
+          <div id="latinSettings" class="settings-subpanel" hidden aria-hidden="true">
+            <p class="settings-subheading">Drill complexity</p>
+            <div class="settings-slider-group">
+              <input id="latinDrillLevel" class="settings-slider" type="range" min="1" max="5" step="1" value="3" />
+              <div class="settings-slider-value" id="latinDrillLevelValue">Level 3 - Phrase</div>
+              <p class="settings-slider-hint">Slide right to include longer anatomical phrases and sentences.</p>
+            </div>
+
+            <p class="settings-subheading">Declensions</p>
+            <label class="settings-toggle-row" for="latinDeclI">
+              <input id="latinDeclI" type="checkbox" data-latin-decl="I" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">I declension</span>
+                <span class="settings-toggle-description">Practice a-stems and their adjectives.</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="latinDeclII">
+              <input id="latinDeclII" type="checkbox" data-latin-decl="II" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">II declension</span>
+                <span class="settings-toggle-description">o/um-stems including masculine and neuter patterns.</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="latinDeclIII">
+              <input id="latinDeclIII" type="checkbox" data-latin-decl="III" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">III declension</span>
+                <span class="settings-toggle-description">Consonant & i-stem nouns.</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="latinDeclIV">
+              <input id="latinDeclIV" type="checkbox" data-latin-decl="IV" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">IV declension</span>
+                <span class="settings-toggle-description">u-stem nouns (e.g., manus).</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="latinDeclV">
+              <input id="latinDeclV" type="checkbox" data-latin-decl="V" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">V declension</span>
+                <span class="settings-toggle-description">e-stem nouns such as res, facies.</span>
+              </span>
+            </label>
+          </div>
+        </li>
+        <li class="settings-list-item">
+          <button id="btnBiofyzSettings" class="settings-item settings-card" type="button" aria-controls="biofyzSettings" aria-expanded="false" role="menuitem">
+            <span class="settings-dot" aria-hidden="true"></span>
+            <span class="settings-text">
+              <span class="settings-label">Biofyz Generator</span>
+              <span class="settings-description">Toggle question types for gen:biofyz.</span>
+            </span>
+            <span class="settings-chip" data-state="on">All</span>
+          </button>
+          <div id="biofyzSettings" class="settings-subpanel" hidden aria-hidden="true">
+            <div class="biofyz-search-row">
+              <input
+                id="biofyzTypeSearch"
+                class="settings-select-input biofyz-search-input"
+                type="search"
+                placeholder="Search formula or question type"
+                aria-label="Search Biofyz question types"
+                spellcheck="false"
+                autocapitalize="none"
+                autocomplete="off"
+              />
+            </div>
+            <p id="biofyzSearchEmpty" class="biofyz-search-empty" hidden>No matching question types.</p>
+
+            <details class="biofyz-topic" data-biofyz-topic open>
+              <summary class="biofyz-topic-summary">
+                <span class="biofyz-topic-title">Fluids, Osmosis, and Circulation</span>
+              </summary>
+              <div class="biofyz-topic-body">
+            <label class="settings-toggle-row" for="biofyzReynolds">
+              <input id="biofyzReynolds" type="checkbox" data-biofyz-type="reynolds" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Reynolds number</span>
+                <span class="settings-toggle-description">\( \mathrm{Re}=\frac{\rho v r}{\mu},\; r=\sqrt{\frac{A}{\pi}} \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzNernst">
+              <input id="biofyzNernst" type="checkbox" data-biofyz-type="nernst" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Nernst equation</span>
+                <span class="settings-toggle-description">\( U=\frac{RT}{zF}\ln\frac{c_{\mathrm{ext}}}{c_{\mathrm{int}}} \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzOsmoticPi">
+              <input id="biofyzOsmoticPi" type="checkbox" data-biofyz-type="osmotic_pi" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Osmotic pressure</span>
+                <span class="settings-toggle-description">\( \pi=RTCi \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzOsmoticIsotonic">
+              <input id="biofyzOsmoticIsotonic" type="checkbox" data-biofyz-type="osmotic_isotonic" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Isotonic glucose concentration</span>
+                <span class="settings-toggle-description">\( d_{\%}=\frac{c_{\mathrm{NaCl}}\,i_{\mathrm{NaCl}}\,M_{\mathrm{glc}}}{10\,i_{\mathrm{glc}}} \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzMolarityC">
+              <input id="biofyzMolarityC" type="checkbox" data-biofyz-type="molarity_c" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Molarity from mass + physio</span>
+                <span class="settings-toggle-description">\( c=\frac{\frac{m}{M}+c_{\mathrm{phys}}V}{V} \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzMolarityDilution">
+              <input id="biofyzMolarityDilution" type="checkbox" data-biofyz-type="molarity_dilution" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Saline dilution (water added)</span>
+                <span class="settings-toggle-description">\( c_1V_1+c_2V_2=c_3(V_1+V_2) \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzArterial">
+              <input id="biofyzArterial" type="checkbox" data-biofyz-type="arterial" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Arterial pressure (area decrease)</span>
+                <span class="settings-toggle-description">\( \Delta_{\%}P=\left(\frac{1}{(1-\Delta_{\%}A)^2}-1\right)\times 100\% \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzArterialMeanBp">
+              <input id="biofyzArterialMeanBp" type="checkbox" data-biofyz-type="arterial_mean_bp" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Mean BP from SBP/DBP</span>
+                <span class="settings-toggle-description">\( p_{mean}=\left(\frac{1}{3}SBP+\frac{2}{3}DBP\right)\times 0.133322 \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzArterialAneurysm">
+              <input id="biofyzArterialAneurysm" type="checkbox" data-biofyz-type="arterial_aneurysm" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Arterial pressure (aneurysm)</span>
+                <span class="settings-toggle-description">\( A_1v_1=A_2v_2,\; p_1+\frac{1}{2}\rho v_1^2=p_2+\frac{1}{2}\rho v_2^2,\; \Delta_{\%}p=\left(\frac{p_2-p_1}{p_1}\right)\times 100\% \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzArterialPulmonary">
+              <input id="biofyzArterialPulmonary" type="checkbox" data-biofyz-type="arterial_pulmonary_speed" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Pulmonary speed from flow continuity</span>
+                <span class="settings-toggle-description">\( Q=A_av_a=A_pv_p,\; A_p=A_a(1+\Delta_{\%}A),\; v_p=\frac{Q}{A_p} \)</span>
+              </span>
+            </label>
+              </div>
+            </details>
+
+            <details class="biofyz-topic" data-biofyz-topic open>
+              <summary class="biofyz-topic-summary">
+                <span class="biofyz-topic-title">Optics and Photons</span>
+              </summary>
+              <div class="biofyz-topic-body">
+            <label class="settings-toggle-row" for="biofyzPhotonLambda">
+              <input id="biofyzPhotonLambda" type="checkbox" data-biofyz-type="photon_lambda" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Photon wavelength</span>
+                <span class="settings-toggle-description">\( \lambda=\frac{cNh}{IAt} \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzPhotonEnergy">
+              <input id="biofyzPhotonEnergy" type="checkbox" data-biofyz-type="photon_energy" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Photon energy</span>
+                <span class="settings-toggle-description">\( E=\frac{hc}{\lambda} \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzPhotoelectric">
+              <input id="biofyzPhotoelectric" type="checkbox" data-biofyz-type="photoelectric" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Braking radiation</span>
+                <span class="settings-toggle-description">\( \Delta_{\%}\lambda_{\min}=\left(\frac{1}{1-w}-1\right)\times 100\% \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzXrayEmax">
+              <input id="biofyzXrayEmax" type="checkbox" data-biofyz-type="xray_emax" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">X-ray max photon energy</span>
+                <span class="settings-toggle-description">\( E_{max}=eU \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzSound">
+              <input id="biofyzSound" type="checkbox" data-biofyz-type="sound" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Sound intensity (pipes)</span>
+                <span class="settings-toggle-description">\( L=10\log_{10}\!\left(N\times 10^{L_1/10}\right) \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzSoundLoudspeakerPressure">
+              <input id="biofyzSoundLoudspeakerPressure" type="checkbox" data-biofyz-type="sound_loudspeaker_pressure" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Loudspeaker acoustic pressure</span>
+                <span class="settings-toggle-description">\( v=2\pi fA,\; p_{ac}=\rho cv \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzEye">
+              <input id="biofyzEye" type="checkbox" data-biofyz-type="eye" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Eye resolution</span>
+                <span class="settings-toggle-description">\( x=\frac{d/2}{\tan(\alpha/2)},\; \alpha=\frac{1}{60}^{\circ} \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzMicroscope">
+              <input id="biofyzMicroscope" type="checkbox" data-biofyz-type="microscope" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Microscope resolution</span>
+                <span class="settings-toggle-description">\( R=\frac{\lambda}{NA} \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzMicroscopeMagnification">
+              <input id="biofyzMicroscopeMagnification" type="checkbox" data-biofyz-type="microscope_magnification" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Microscope magnification</span>
+                <span class="settings-toggle-description">\( M=M_{obj}\times M_{eye} \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzNearPoint">
+              <input id="biofyzNearPoint" type="checkbox" data-biofyz-type="nearpoint" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Near point (glasses)</span>
+                <span class="settings-toggle-description">\( \frac{1}{NP}=\frac{1}{0.25}-P \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzFarPoint">
+              <input id="biofyzFarPoint" type="checkbox" data-biofyz-type="farpoint" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Far point (glasses)</span>
+                <span class="settings-toggle-description">\( FP=-\frac{1}{P} \)</span>
+              </span>
+            </label>
+              </div>
+            </details>
+
+            <details class="biofyz-topic" data-biofyz-topic open>
+              <summary class="biofyz-topic-summary">
+                <span class="biofyz-topic-title">Acoustics, Radiation, and Imaging</span>
+              </summary>
+              <div class="biofyz-topic-body">
+            <label class="settings-toggle-row" for="biofyzDebroglie">
+              <input id="biofyzDebroglie" type="checkbox" data-biofyz-type="debroglie" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">de Broglie wavelength</span>
+                <span class="settings-toggle-description">\( \lambda=\frac{h}{\sqrt{2meV}} \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzDecayLambda">
+              <input id="biofyzDecayLambda" type="checkbox" data-biofyz-type="decay_lambda" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Decay constant</span>
+                <span class="settings-toggle-description">\( \lambda=\frac{\ln(A_1/A_2)}{t_2-t_1} \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzDecayHalfLife">
+              <input id="biofyzDecayHalfLife" type="checkbox" data-biofyz-type="decay_half_life" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Half-life</span>
+                <span class="settings-toggle-description">\( t_{1/2}=\frac{t\ln 2}{\ln(A_0/A_t)} \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzEar">
+              <input id="biofyzEar" type="checkbox" data-biofyz-type="ear" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Ear canal resonance</span>
+                <span class="settings-toggle-description">\( f=\frac{v}{4L} \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzAcousticImpedance">
+              <input id="biofyzAcousticImpedance" type="checkbox" data-biofyz-type="acoustic_impedance" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Acoustical impedance (air)</span>
+                <span class="settings-toggle-description">\( Z=\rho c \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzUltrasoundPct">
+              <input id="biofyzUltrasoundPct" type="checkbox" data-biofyz-type="ultrasound_transmission_pct" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Ultrasound transmission (%)</span>
+                <span class="settings-toggle-description">\( R=\left(\frac{Z_2-Z_1}{Z_2+Z_1}\right)^2,\; T=(1-R)\times 100\% \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzUltrasoundIntensity">
+              <input id="biofyzUltrasoundIntensity" type="checkbox" data-biofyz-type="ultrasound_transmitted_intensity" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Ultrasound transmitted intensity</span>
+                <span class="settings-toggle-description">\( I_t=I_0\left(1-\left(\frac{c_2-c_1}{c_2+c_1}\right)^2\right),\; \rho_1=\rho_2 \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzShieldingIntensity">
+              <input id="biofyzShieldingIntensity" type="checkbox" data-biofyz-type="shielding_intensity" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Radiation shielding (decay + attenuation)</span>
+                <span class="settings-toggle-description">\( \frac{I}{I_0}=e^{-\lambda t}e^{-\mu d},\; \lambda=\frac{\ln 2}{t_{1/2}},\; \mu=\frac{\ln 2}{d_{1/2}} \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzShieldingDual">
+              <input id="biofyzShieldingDual" type="checkbox" data-biofyz-type="shielding_dual_board" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Radiation absorption (two boards)</span>
+                <span class="settings-toggle-description">\( A_{tot}=A_1+(1-A_1)(1-T_2) \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzDoseEquivalentMixed">
+              <input id="biofyzDoseEquivalentMixed" type="checkbox" data-biofyz-type="dose_equivalent_mixed" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Dose equivalent (mixed field)</span>
+                <span class="settings-toggle-description">\( H=D\left[p_{\gamma}Q_{\gamma}+(1-p_{\gamma})Q_n\right] \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzCt">
+              <input id="biofyzCt" type="checkbox" data-biofyz-type="ct" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">CT number</span>
+                <span class="settings-toggle-description">\( \mu=\frac{1}{d}\ln\frac{N_0}{N_1},\; CT=\left(\frac{\mu-\mu_{water}}{\mu_{water}}\right)\times 1000 \)</span>
+              </span>
+            </label>
+              </div>
+            </details>
+
+            <details class="biofyz-topic" data-biofyz-topic open>
+              <summary class="biofyz-topic-summary">
+                <span class="biofyz-topic-title">Biostatistics and Probability</span>
+              </summary>
+              <div class="biofyz-topic-body">
+            <label class="settings-toggle-row" for="biofyzMedian">
+              <input id="biofyzMedian" type="checkbox" data-biofyz-type="median" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Median</span>
+                <span class="settings-toggle-description">\( \tilde{x}=x_{(n+1)/2}\;\text{or}\;\tilde{x}=\frac{x_{n/2}+x_{n/2+1}}{2} \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzQuartile">
+              <input id="biofyzQuartile" type="checkbox" data-biofyz-type="quartile" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">First quartile</span>
+                <span class="settings-toggle-description">\( Q_1=x_{\lceil n/4 \rceil},\; Q_3=x_{\lceil 3n/4 \rceil} \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzIqr">
+              <input id="biofyzIqr" type="checkbox" data-biofyz-type="iqr" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Interquartile range</span>
+                <span class="settings-toggle-description">\( IQR=Q_3-Q_1 \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzCv">
+              <input id="biofyzCv" type="checkbox" data-biofyz-type="cv" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Variation coefficient</span>
+                <span class="settings-toggle-description">\( CV=\frac{\sqrt{S^2}}{\bar{x}}\times 100\% \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzCiUpper">
+              <input id="biofyzCiUpper" type="checkbox" data-biofyz-type="ciupper" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Confidence limits</span>
+                <span class="settings-toggle-description">\( U/L=\bar{x}\pm t_{p,df}\frac{s}{\sqrt{n}},\; s=\sqrt{S^2} \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzTstat">
+              <input id="biofyzTstat" type="checkbox" data-biofyz-type="tstat" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Test criterion</span>
+                <span class="settings-toggle-description">\( t=\frac{\bar{x}-\mu_0}{s/\sqrt{n}},\; s=\sqrt{S^2} \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzRelFreq">
+              <input id="biofyzRelFreq" type="checkbox" data-biofyz-type="relfreq" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Relative frequency</span>
+                <span class="settings-toggle-description">\( f=\frac{\sum_{i=1}^{k} n_i}{\sum_{i=1}^{4} n_i} \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzCondProbCond">
+              <input id="biofyzCondProbCond" type="checkbox" data-biofyz-type="condprob_cond" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Conditional probability</span>
+                <span class="settings-toggle-description">\( P(A\mid B)=\frac{P(A\cap B)}{P(B)} \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzCondProbNeither">
+              <input id="biofyzCondProbNeither" type="checkbox" data-biofyz-type="condprob_neither" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Neither-event probability</span>
+                <span class="settings-toggle-description">\( P(\text{neither})=1-[P(A)+P(B)-P(A\cap B)] \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzHypoAlpha">
+              <input id="biofyzHypoAlpha" type="checkbox" data-biofyz-type="hypotest_alpha" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Hypothesis: non-rejection under H0</span>
+                <span class="settings-toggle-description">\( P(\neg R_{H_0}\mid H_0)=1-\alpha \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzHypoPower">
+              <input id="biofyzHypoPower" type="checkbox" data-biofyz-type="hypotest_power" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Hypothesis: power</span>
+                <span class="settings-toggle-description">\( P(R_{H_0}\mid H_A)=1-\beta \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzNegPredNpv">
+              <input id="biofyzNegPredNpv" type="checkbox" data-biofyz-type="negpred_npv" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Negative predictive value</span>
+                <span class="settings-toggle-description">\( NPV=\frac{Sp(1-p)}{Sp(1-p)+(1-Se)p} \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzNegPredPpv">
+              <input id="biofyzNegPredPpv" type="checkbox" data-biofyz-type="negpred_ppv" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Positive predictive value</span>
+                <span class="settings-toggle-description">\( PPV=\frac{Se\,p}{Se\,p+(1-Sp)(1-p)} \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzSensNeg">
+              <input id="biofyzSensNeg" type="checkbox" data-biofyz-type="sensneg" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Sensitivity negatives</span>
+                <span class="settings-toggle-description">\( N_{\mathrm{neg}}=(1-Se)N \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzCardiacOutput">
+              <input id="biofyzCardiacOutput" type="checkbox" data-biofyz-type="cardiac_output" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Cardiac output</span>
+                <span class="settings-toggle-description">\( CO=HR\times SV\times 10^{-3} \)</span>
+              </span>
+            </label>
+              </div>
+            </details>
+
+            <details class="biofyz-topic" data-biofyz-topic open>
+              <summary class="biofyz-topic-summary">
+                <span class="biofyz-topic-title">ECG and Cardiac Function</span>
+              </summary>
+              <div class="biofyz-topic-body">
+            <label class="settings-toggle-row" for="biofyzEcgAvf">
+              <input id="biofyzEcgAvf" type="checkbox" data-biofyz-type="ecg_avf_zero" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">ECG lead (aVF = 0)</span>
+                <span class="settings-toggle-description">\( aVF=II-\frac{I}{2},\; II=I+III \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzEcgAvl">
+              <input id="biofyzEcgAvl" type="checkbox" data-biofyz-type="ecg_avl_zero" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">ECG lead (aVL = 0)</span>
+                <span class="settings-toggle-description">\( aVL=I-\frac{II}{2},\; II=2(I-aVL) \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzEcgPracAxis">
+              <input id="biofyzEcgPracAxis" type="checkbox" data-biofyz-type="ecgprac_axis" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">ECG practical: axis</span>
+                <span class="settings-toggle-description">\( \alpha=\tan^{-1}\!\left(\frac{2}{\sqrt{3}}\left(\frac{III}{I}+0.5\right)\right) \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzEcgPracRate">
+              <input id="biofyzEcgPracRate" type="checkbox" data-biofyz-type="ecgprac_rate" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">ECG practical: rate</span>
+                <span class="settings-toggle-description">\( HR=\frac{60\times 25}{RR_{\mathrm{total}}/RR_n} \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzEfEsv">
+              <input id="biofyzEfEsv" type="checkbox" data-biofyz-type="ef_esv_decrease" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">EF intervention effect</span>
+                <span class="settings-toggle-description">\( \Delta_{\%}ESV=\left(1-\frac{ESV_2}{ESV_1}\right)\times 100\%,\; \frac{ESV_2}{ESV_1}=\frac{1-EF_2}{1-EF_1} \)</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="biofyzEfSv">
+              <input id="biofyzEfSv" type="checkbox" data-biofyz-type="ef_from_sv_esv" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">EF from SV and ESV</span>
+                <span class="settings-toggle-description">\( EF=\frac{SV}{EDV}\times 100\%,\; EDV=SV+ESV \)</span>
+              </span>
+            </label>
+              </div>
+            </details>
+          </div>
+        </li>
+        <li class="settings-list-item">
+          <button id="btnMcqSettings" class="settings-item settings-card" type="button" aria-controls="mcqSettings" aria-expanded="false" role="menuitem">
+            <span class="settings-dot" aria-hidden="true"></span>
+            <span class="settings-text">
+              <span class="settings-label">MCQ Display</span>
+              <span class="settings-description">Choose where answer text appears for MCQ cards.</span>
+            </span>
+            <span class="settings-chip" data-state="on">Card</span>
+          </button>
+          <div id="mcqSettings" class="settings-subpanel" hidden aria-hidden="true">
+            <label class="settings-toggle-row" for="mcqAnswersOnCard">
+              <input id="mcqAnswersOnCard" type="checkbox" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Show answers on card face</span>
+                <span class="settings-toggle-description">If off, answers move into the MCQ buttons.</span>
+              </span>
+            </label>
+          </div>
+        </li>
+        <li class="settings-list-item">
+          <button id="btnTtsSettings" class="settings-item settings-card" type="button" aria-controls="ttsSettings" aria-expanded="false" role="menuitem">
+            <span class="settings-dot" aria-hidden="true"></span>
+            <span class="settings-text">
+              <span class="settings-label">Text-to-speech</span>
+              <span class="settings-description">Choose when narration plays during study.</span>
+            </span>
+            <span class="settings-chip" data-state="closed">Closed</span>
+          </button>
+          <div id="ttsSettings" class="settings-subpanel" hidden aria-hidden="true">
+            <label class="settings-toggle-row" for="ttsPrefFront">
+              <input id="ttsPrefFront" type="checkbox" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Read front faces aloud</span>
+                <span class="settings-toggle-description">Speak the prompt automatically when the card appears.</span>
+              </span>
+            </label>
+            <label class="settings-toggle-row" for="ttsPrefBack">
+              <input id="ttsPrefBack" type="checkbox" />
+              <span class="settings-toggle-text">
+                <span class="settings-toggle-title">Read back faces aloud</span>
+                <span class="settings-toggle-description">Narrate the answer after you reveal the card.</span>
+              </span>
+            </label>
+            <div class="settings-select-row">
+              <div class="settings-select-label">
+                <span class="settings-toggle-title">Front voice</span>
+                <span class="settings-toggle-description">Voice used for prompts.</span>
+              </div>
+              <button id="ttsVoiceFrontBtn" class="settings-select-button" type="button" aria-expanded="false" aria-haspopup="listbox"></button>
+              <div id="ttsVoiceFrontMenu" class="settings-select-menu" hidden>
+                <div class="settings-select-search">
+                  <input id="ttsVoiceFrontSearch" class="settings-select-input" type="text" placeholder="Search voices" aria-label="Filter front voices" spellcheck="false" autocapitalize="none" autocomplete="off" />
+                </div>
+                <div id="ttsVoiceFrontList" class="settings-select-list" role="listbox" aria-label="Front voices"></div>
+              </div>
+            </div>
+            <div class="settings-select-row">
+              <div class="settings-select-label">
+                <span class="settings-toggle-title">Back voice</span>
+                <span class="settings-toggle-description">Voice used for answers.</span>
+              </div>
+              <button id="ttsVoiceBackBtn" class="settings-select-button" type="button" aria-expanded="false" aria-haspopup="listbox"></button>
+              <div id="ttsVoiceBackMenu" class="settings-select-menu" hidden>
+                <div class="settings-select-search">
+                  <input id="ttsVoiceBackSearch" class="settings-select-input" type="text" placeholder="Search voices" aria-label="Filter back voices" spellcheck="false" autocapitalize="none" autocomplete="off" />
+                </div>
+                <div id="ttsVoiceBackList" class="settings-select-list" role="listbox" aria-label="Back voices"></div>
+              </div>
+            </div>
+            <p id="ttsVoiceHint" class="settings-select-hint" aria-live="polite" hidden></p>
+          </div>
+        </li>
+      </ul>
+      <div class="bottom-gradient" aria-hidden="true"></div>
+    </div>
+  </div>
+  <div id="backdrop" class="backdrop" aria-hidden="true"></div>
+</body>
+</html>
+
+

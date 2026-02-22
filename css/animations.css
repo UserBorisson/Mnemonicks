@@ -1,0 +1,47 @@
+/* animations.css */
+@keyframes fade-in { from {opacity:0} to {opacity:1} }
+@keyframes fade-out { from {opacity:1} to {opacity:0} }
+
+/* Apply to panels in non-fullscreen layout */
+.options.animating-in,
+.fillin.animating-in { animation: fade-in .5s ease-out forwards; }
+
+.options.animating-out,
+.fillin.animating-out { animation: fade-out .4s ease-in forwards; }
+
+
+/* �� FULLSCREEN PANEL POSITIONING OVERRIDES ����������������������������������� */
+#flashcard-frame.fullscreen-split .options,
+#flashcard-frame.fullscreen-split .fillin {
+  /* cancel default centering */
+  position: fixed !important;
+  left:       75vw !important;
+  transform:  translateX(-50%) !important;
+
+  /* pin to right and center vertically beside card */
+  right:      auto !important;
+
+  /* size to ~40% of viewport width */
+  width:      var(--fullscreen-split-panel-width, min(36vw, 520px));
+}
+
+/* �� FLY-IN-RIGHT / FLY-OUT-RIGHT KEYFRAMES FOR FULLSCREEN MODE ���������������� */
+@keyframes fly-in-right {
+  from { transform: translateX(-50%) translateY(50px); opacity: 0; }
+  to   { transform: translateX(-50%) translateY(0);     opacity: 1; }
+}
+
+@keyframes fly-out-right {
+  from { transform: translateX(-50%) translateY(0);     opacity: 1; }
+  to   { transform: translateX(-50%) translateY(50px);  opacity: 0; }
+}
+
+/* �� FULLSCREEN PANEL ANIMATIONS ����������������������������������������������� */
+#flashcard-frame.fullscreen-split .options.animating-in,
+#flashcard-frame.fullscreen-split .fillin.animating-in {
+  animation: fly-in-right  0.5s ease-out  forwards;
+}
+#flashcard-frame.fullscreen-split .options.animating-out,
+#flashcard-frame.fullscreen-split .fillin.animating-out {
+  animation: fly-out-right 0.4s ease-in   forwards;
+}

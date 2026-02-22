@@ -1,0 +1,6 @@
+{
+  "request_retention": 0.98,
+  "maximum_interval": 36500,
+  "enable_fuzz": true,
+  "enable_short_term": true
+}

@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Study Home | Overview</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23373737'/%3E%3Cpath d='M8 23l8-14 8 14' stroke='%23fff' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@500;600;700&family=Sora:wght@600;700;800&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="css/tabs.css" />
+  <link rel="stylesheet" href="home.css" />
+</head>
+<body>
+  <aside class="left-hover-menu" aria-label="Navigation">
+    <div class="left-hover-hitbox" aria-hidden="true"></div>
+    <div class="left-hover-panel">
+      <section class="rail-group rail-home" aria-label="Back">
+        <a id="railBackBtn" class="mode-trigger home-trigger" href="index.html" aria-label="Back to study">
+          <span class="mode-trigger-main">
+            <span class="mode-trigger-icon" aria-hidden="true">
+              <svg class="bi bi-box-arrow-left" data-src="icons/bootstrap/box-arrow-left.svg" aria-hidden="true"></svg>
+            </span>
+            <span class="mode-trigger-label">Back</span>
+          </span>
+        </a>
+      </section>
+    </div>
+  </aside>
+
+  <div class="app-shell">
+    <div class="top-summary-row">
+      <header class="surface profile-banner" aria-label="Profile banner">
+        <div class="profile-left">
+          <div class="avatar-wrap">
+            <img id="profileAvatarImage" class="avatar-image hidden" alt="" />
+            <div id="profileAvatarFallback" class="avatar-fallback" aria-hidden="true">BO</div>
+          </div>
+          <div class="profile-copy">
+            <h1 id="profileName">User</h1>
+            <ul id="profileMetaChips" class="chip-list" aria-label="Profile details"></ul>
+          </div>
+        </div>
+      </header>
+
+      <article class="surface card heatmap-card top-heatmap-card">
+        <div class="heatmap-panel">
+          <div class="heatmap-head">
+            <div class="heatmap-year-controls">
+              <button id="heatmapPrevYearBtn" class="heatmap-year-nav" type="button" aria-label="Previous year">
+                <svg class="bi bi-caret-left-fill" data-src="icons/bootstrap/caret-left-fill.svg" aria-hidden="true"></svg>
+              </button>
+              <div
+                id="heatmapYearCarousel"
+                class="heatmap-year-carousel"
+                role="button"
+                tabindex="0"
+                aria-label="Drag left or right to change year"
+              >
+                <div id="heatmapYearTrack" class="heatmap-year-track" aria-live="polite">
+                  <span class="heatmap-year-slot" data-offset="-1">2025</span>
+                  <span class="heatmap-year-slot" data-offset="0">2026</span>
+                  <span class="heatmap-year-slot" data-offset="1">2027</span>
+                </div>
+              </div>
+              <button id="heatmapNextYearBtn" class="heatmap-year-nav" type="button" aria-label="Next year">
+                <svg class="bi bi-caret-right-fill" data-src="icons/bootstrap/caret-right-fill.svg" aria-hidden="true"></svg>
+              </button>
+            </div>
+            <div id="heatmapAvgSummary" class="heatmap-avg-summary" aria-live="polite">
+              <div id="heatmapAvgPrimary" class="heatmap-avg-primary">Avg 0.0/day</div>
+            </div>
+            <div class="heatmap-legend" aria-hidden="true">
+              <span>Less</span>
+              <div class="legend-cells">
+                <span data-level="0"></span>
+                <span data-level="1"></span>
+                <span data-level="2"></span>
+                <span data-level="3"></span>
+                <span data-level="4"></span>
+              </div>
+              <span>More</span>
+            </div>
+          </div>
+          <div class="heatmap-scroll" role="region" aria-label="Recent review activity heatmap" tabindex="0">
+            <div id="heatmapShell" class="heatmap-shell">
+              <div class="heatmap-month-row">
+                <div class="heatmap-month-gutter" aria-hidden="true"></div>
+                <div id="heatmapMonths" class="heatmap-months" aria-hidden="true"></div>
+              </div>
+              <div class="heatmap-body">
+                <div class="heatmap-weekdays" aria-hidden="true">
+                  <span>Mon</span>
+                  <span></span>
+                  <span>Wed</span>
+                  <span></span>
+                  <span>Fri</span>
+                  <span></span>
+                  <span>Sun</span>
+                </div>
+                <div id="heatmapGrid" class="heatmap-grid" role="grid" aria-label="Daily review activity"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="heatmapTooltip" class="heatmap-tooltip" role="status" aria-live="polite"></div>
+      </article>
+    </div>
+
+    <section class="surface today-hero" aria-labelledby="todayTitle">
+      <h2 id="todayTitle">Today</h2>
+      <p id="todayDueLabel" class="today-due">0 Cards Due</p>
+      <p id="todayEstimate" class="today-estimate">Estimated time: 0-0 min</p>
+      <p id="todayBreakdown" class="today-breakdown">0 review + 0 relearn</p>
+      <p id="nextReviewTracker" class="today-next-review">Next review: (date and time)</p>
+      <div class="today-actions">
+        <button id="todayStartBtn" class="btn btn-primary btn-large" type="button">Start Review</button>
+        <button id="customSessionBtn" class="btn btn-secondary btn-large" type="button">Custom Session</button>
+        <button id="warmupBtn" class="btn btn-ghost btn-large" type="button">Warm-up (5 cards)</button>
+      </div>
+    </section>
+
+    <main class="support-layout">
+      <section class="support-main" aria-label="Actionable insights">
+        <article class="surface card">
+          <div class="card-head">
+            <h3>Decks</h3>
+            <div class="card-head-actions">
+              <button id="importDeckBtn" class="text-link" type="button">Import deck</button>
+              <button id="viewAllDecksBtn" class="text-link" type="button">View all decks</button>
+            </div>
+          </div>
+          <div id="deckPersistenceBar" class="deck-persistence-bar" aria-live="polite">
+            <span id="deckPersistenceText" class="deck-persistence-text">Save location: deck file</span>
+            <button id="flushDeckWritesBtn" class="text-link deck-persistence-flush" type="button" hidden>Flush pending writes</button>
+          </div>
+          <div id="decksDueList" class="decks-list"></div>
+        </article>
+
+        <article class="surface card">
+          <div class="card-head">
+            <h3>Recent Activity</h3>
+            <button id="viewAllActivityBtn" class="text-link" type="button">View all</button>
+          </div>
+          <div class="table-wrap">
+            <table aria-label="Recent activity table">
+              <thead>
+                <tr>
+                  <th scope="col">Date</th>
+                  <th scope="col">Deck</th>
+                  <th scope="col">Reviewed</th>
+                  <th scope="col">Accuracy</th>
+                  <th scope="col">Time</th>
+                </tr>
+              </thead>
+              <tbody id="recentActivityRows"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <aside class="support-side" aria-label="Secondary widgets">
+        <article class="surface card widget-card">
+          <div class="card-head">
+            <h3>Weekly Goal</h3>
+            <p id="weeklyGoalMeta" class="card-note">0 / 120</p>
+          </div>
+          <div class="goal-track" aria-hidden="true">
+            <div id="weeklyGoalFill" class="goal-fill"></div>
+          </div>
+          <p id="weeklyGoalInsight" class="widget-note">Set a daily block to stay on pace.</p>
+        </article>
+
+        <article class="surface card widget-card">
+          <div class="card-head">
+            <h3>Due Forecast</h3>
+          </div>
+          <ul id="dueForecastList" class="forecast-list"></ul>
+        </article>
+
+        <article class="surface card widget-card">
+          <div class="card-head">
+            <h3>Focus Suggestions</h3>
+          </div>
+          <ul id="suggestionsList" class="suggestions-list"></ul>
+        </article>
+      </aside>
+    </main>
+  </div>
+
+  <div class="mobile-start-bar" id="mobileStartBar" aria-label="Quick start review">
+    <p id="mobileDueLabel" class="mobile-due">Due 0</p>
+    <button id="mobileStartBtn" class="btn btn-primary" type="button">Start Review</button>
+  </div>
+
+  <div id="homeInputModal" class="home-input-modal" hidden aria-hidden="true">
+    <div class="home-input-backdrop" data-home-modal-close="1"></div>
+    <section class="home-input-panel" role="dialog" aria-modal="true" aria-labelledby="homeInputModalTitle">
+      <h2 id="homeInputModalTitle" class="home-input-title">Input</h2>
+      <p id="homeInputModalMessage" class="home-input-message" hidden></p>
+      <label id="homeInputModalLabel" class="home-input-label" for="homeInputModalField">Value</label>
+      <input id="homeInputModalField" class="home-input-field" type="text" autocomplete="off" />
+      <p id="homeInputModalError" class="home-input-error" role="status" aria-live="polite"></p>
+      <div class="home-input-actions">
+        <button id="homeInputModalCancel" class="btn btn-ghost" type="button">Cancel</button>
+        <button id="homeInputModalConfirm" class="btn btn-primary" type="button">Confirm</button>
+      </div>
+    </section>
+  </div>
+
+  <div id="deckImportModal" class="home-input-modal deck-import-modal" hidden aria-hidden="true">
+    <div class="home-input-backdrop" data-deck-import-close="1"></div>
+    <section class="home-input-panel deck-import-panel" role="dialog" aria-modal="true" aria-labelledby="deckImportTitle">
+      <h2 id="deckImportTitle" class="home-input-title">Import Deck</h2>
+
+      <div class="deck-import-composite">
+        <button id="deckImportFileBtn" class="deck-import-file-trigger" type="button" aria-label="Choose source file">
+          <span id="deckImportFileIcon" class="deck-import-file-icon" aria-hidden="true">
+            <svg class="bi bi-paperclip" data-src="icons/bootstrap/filetypes/paperclip.svg" aria-hidden="true"></svg>
+          </span>
+        </button>
+        <span class="deck-import-separator" aria-hidden="true"></span>
+        <input id="deckImportName" class="deck-import-name-field" type="text" autocomplete="off" placeholder="Deck name" />
+        <span class="deck-import-separator" aria-hidden="true"></span>
+        <button id="deckImportClearBtn" class="deck-import-clear-trigger" type="button" aria-label="Clear deck name and detach file" title="Clear name and detach file">
+          <span class="deck-import-clear-icon" aria-hidden="true">
+            <svg class="bi bi-trash3-fill" data-src="icons/bootstrap/trash3-fill.svg" aria-hidden="true"></svg>
+          </span>
+        </button>
+      </div>
+      <input id="deckImportFile" class="deck-import-file-hidden" type="file" accept=".json,.csv,.tsv,.txt,.md,.text" />
+      <p id="deckImportError" class="home-input-error deck-import-error" role="status" aria-live="polite"></p>
+
+      <section id="deckImportMappingPanel" class="deck-import-mapping" hidden>
+        <p id="deckImportMetaSummary" class="deck-import-note"></p>
+        <p id="deckImportWarnings" class="deck-import-warning" hidden></p>
+
+        <label id="deckImportUseFirstTwoWrap" class="deck-import-checkbox" hidden>
+          <input id="deckImportUseFirstTwo" type="checkbox" />
+          Use first two columns (explicit fallback)
+        </label>
+
+        <div class="deck-import-profile-row">
+          <label class="deck-import-checkbox">
+            <input id="deckImportSaveProfile" type="checkbox" checked />
+            Save import profile
+          </label>
+          <input id="deckImportProfileName" class="deck-import-profile-name" type="text" autocomplete="off" placeholder="Profile name" />
+        </div>
+
+        <div id="deckImportColumnMap" class="deck-import-column-map"></div>
+
+        <label class="home-input-label deck-import-preview-label" for="deckImportPreviewRow">Preview Row</label>
+        <input id="deckImportPreviewRow" class="home-input-field deck-import-preview-row" type="number" min="1" value="1" />
+
+        <div class="deck-import-preview-grid">
+          <pre id="deckImportPreviewRaw" class="deck-import-preview"></pre>
+          <pre id="deckImportPreviewJson" class="deck-import-preview"></pre>
+        </div>
+        <div class="deck-import-render-grid">
+          <article class="deck-import-render-card">
+            <h3>Front Preview</h3>
+            <div id="deckImportPreviewRenderFront" class="deck-import-render-body"></div>
+          </article>
+          <article class="deck-import-render-card">
+            <h3>Back Preview</h3>
+            <div id="deckImportPreviewRenderBack" class="deck-import-render-body"></div>
+          </article>
+        </div>
+        <a id="deckImportRejectsDownload" class="text-link deck-import-rejects-link" href="#" hidden download="rejects.tsv">Download rejects.tsv</a>
+      </section>
+
+      <div class="home-input-actions deck-import-actions">
+        <button id="deckImportCancel" class="btn deck-import-action-btn deck-import-cancel-btn" type="button" aria-label="Cancel import" title="Cancel import">
+          <svg class="bi bi-x-lg" data-src="icons/bootstrap/x-lg.svg" aria-hidden="true"></svg>
+        </button>
+        <button id="deckImportConfirm" class="btn deck-import-action-btn deck-import-confirm-btn" type="button" aria-label="Confirm import" title="Confirm import">
+          <svg class="bi bi-check-lg" data-src="icons/bootstrap/check-lg.svg" aria-hidden="true"></svg>
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <script src="home.js" defer></script>
+</body>
+</html>

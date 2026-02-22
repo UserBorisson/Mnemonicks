@@ -1,0 +1,67 @@
+/* Scoped styles for the editor modal */
+:root{}
+.edit-overlay{
+  position: fixed; inset:0; background: rgba(0,0,0,.5); z-index: 1000;
+}
+.edit-overlay[hidden]{ display:none; }
+.edit-modal{
+  position: fixed; inset: 10% 50% auto 50%; transform: translateX(-50%);
+  width: clamp(320px, 80vw, 920px); max-height: 80vh; overflow: hidden;
+  background: var(--elevated-color); color: var(--text-primary);
+  border: 1px solid #2a2a2a; border-radius: 16px; z-index: 1001;
+  display: grid; grid-template-rows: auto 1fr auto;
+  box-shadow: 0 12px 40px rgba(0,0,0,.45);
+  opacity: 0; transform-origin: top center; transition: opacity .2s ease, transform .2s ease;
+}
+.edit-modal.open{ opacity: 1; transform: translateX(-50%) translateY(0); }
+
+.edit-header{ display:flex; align-items:center; justify-content:space-between; padding: 12px 16px; border-bottom: 1px solid #2a2a2a; }
+.edit-header h2{ margin:0; font-size: 18px; }
+.edit-tabs{ display:flex; gap:8px; }
+.edit-tab{ background: transparent; color: var(--text-primary); border:1px solid #444; padding:6px 10px; border-radius: 8px; cursor:pointer; }
+.edit-tab.active{ background:#444; }
+
+.edit-body{ overflow:auto; padding: 16px; }
+.tab-section.hidden{ display:none; }
+.field{ display:flex; flex-direction:column; gap:6px; margin-bottom: 12px; }
+.field.cols{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+.field-title{ font-size: 12px; opacity:.9; }
+label{ font-size: 12px; opacity:.9; }
+input, select, textarea{ background:#2c2c2c; color:var(--text-primary); border:1px solid #3a3a3a; border-radius:10px; padding:8px 10px; outline:none; }
+textarea{ min-height: 80px; resize: vertical; }
+.hr{ height:1px; background:#333; margin: 10px 0; }
+
+.img-preview-wrap{ display:flex; align-items:center; gap:12px; }
+.img-preview-wrap img{ width: 120px; height: 90px; object-fit: contain; background:#1a1a1a; border:1px solid #333; border-radius: 8px; }
+.img-status{ font-size: 12px; opacity:.8; }
+
+.chip-list{ display:flex; flex-wrap:wrap; gap:8px; margin-top:6px; }
+.chip{ display:flex; align-items:center; gap:8px; background:#2a2a2a; border:1px solid #3a3a3a; border-radius: 999px; padding:4px 8px; }
+.chip .x{ background:transparent; color:var(--text-primary); border:0; cursor:pointer; font-size:16px; line-height:1; }
+.chip .ok{ font-size: 12px; opacity:.85; display:flex; align-items:center; gap:4px; }
+.add-row{ display:flex; gap:8px; margin-top:8px; }
+.toggles{ display:flex; gap:16px; margin-top:6px; }
+.toggles label{ display:flex; align-items:center; gap:6px; font-size:12px; opacity:.9; }
+.toggles input[type="checkbox"]{ width:auto; accent-color:#ffd200; }
+
+/* Answer chips (toggle buttons) */
+.answer-chip-list{ display:flex; flex-wrap:wrap; gap:8px; }
+.answer-chip-wrap{ display:flex; align-items:center; gap:6px; }
+.answer-chip{ appearance:none; border:1px solid #3a3a3a; background:#2a2a2a; color:var(--text-primary); border-radius:999px; padding:6px 10px; cursor:pointer; }
+.answer-chip.selected{ background:#4a4a4a; border-color:#5a5a5a; }
+.answer-chip:focus{ outline:2px solid #6b7280; outline-offset:2px; }
+.answer-remove{ background:transparent; border:0; color:#bbb; cursor:pointer; font-size:16px; line-height:1; }
+
+.edit-footer{ display:flex; align-items:center; justify-content:space-between; padding: 12px 16px; border-top:1px solid #2a2a2a; }
+.edit-footer .right{ display:flex; gap:8px; }
+.edit-footer button{ background:#2c2c2c; color:var(--text-primary); border:1px solid #3a3a3a; border-radius: 10px; padding:8px 12px; cursor:pointer; }
+.edit-footer button.primary{ background:#4a4a4a; border-color:#5a5a5a; }
+.save-toast{ font-size:12px; opacity:.8; }
+
+/* Hide when [hidden] */
+/* also hide placeholders that will be inlined to avoid icon flash */
+svg[data-src]{ display:none; }
+.edit-modal[hidden]{ display:none; }
+
+/* Hide any legacy font family controls from the Typography tab */
+#typoFamilyPreset, label[for="typoFamilyPreset"], #typoFamily, #fontPresets { display: none !important; }
