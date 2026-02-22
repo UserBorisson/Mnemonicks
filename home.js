@@ -2469,8 +2469,11 @@ function deckWriterBases() {
   const bases = [];
   const override = window.DECK_WRITER_URL || localStorage.getItem("DECK_WRITER_URL");
   if (override) bases.push(String(override).replace(/\/+$/, ""));
+  const host = String(window.location.hostname || "").trim().toLowerCase();
+  const isLoopbackHost = host === "localhost" || host === "127.0.0.1" || host === "0.0.0.0" || host === "::1" || host.endsWith(".local");
+  if (bases.length) return [...new Set(bases.filter(Boolean))];
+  if (!isLoopbackHost) return [];
   const protocol = window.location.protocol === "https:" ? "https:" : "http:";
-  const host = window.location.hostname;
   if (host && host !== "0.0.0.0") bases.push(`${protocol}//${host}:8002`);
   bases.push(`${protocol}//127.0.0.1:8002`);
   bases.push(`${protocol}//localhost:8002`);
