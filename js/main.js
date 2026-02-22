@@ -62,6 +62,7 @@ const DECK_PATH_KEY      = 'DECK_PATH_V1';
 const RECENT_DECKS_KEY   = 'RECENT_DECKS_V1';
 const RECENT_DECK_LIMIT  = 3;
 const NON_DECK_JSON_FILENAMES = new Set(['fsrs_params.json', 'manifest.json']);
+const LOCAL_IMPORTED_DECKS_STORAGE_KEY = 'LOCAL_IMPORTED_DECKS_V1';
 const FSRS_PARAMS_URLS = [
   'config/fsrs_params.json',
   'decks/fsrs_params.json'
@@ -236,6 +237,31 @@ function isExcludedDeckPath(input = '') {
   const base = basenameOfPath(input);
   return !!base && NON_DECK_JSON_FILENAMES.has(base);
 }
+
+function listLocalImportedDecks() {
+  try {
+    const raw = localStorage.getItem(LOCAL_IMPORTED_DECKS_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return [];
+    const seen = new Set();
+    return Object.entries(parsed)
+      .map(([key, value]) => {
+        const path = normalizeDeckPath(key);
+        if (!path || isExcludedDeckPath(path)) return null;
+        const hasCards = Array.isArray(value) || (value && typeof value === 'object' && Array.isArray(value.cards));
+        if (!hasCards) return null;
+        const name = path.split('/').pop() || path;
+        const lower = path.toLowerCase();
+        if (seen.has(lower)) return null;
+        seen.add(lower);
+        return { name, path };
+      })
+      .filter(Boolean);
+  } catch {
+    return [];
+  }
+}
 function normalizeDeckPath(input){
   if (!input) return '';
   let p = String(input).trim();
@@ -331,6 +357,7 @@ function deckWriterHeaders() {
 }
 
 async function listDecksFromServer(){
+  const localDecks = listLocalImportedDecks();
   try {
     const res = await fetch('decks/manifest.json', { cache: 'no-store' });
     if (res.ok) {
@@ -358,7 +385,20 @@ async function listDecksFromServer(){
         .filter(item => item && item.name && item.path)
         .filter(item => /\.json$/i.test(item.path) && !isExcludedDeckPath(item.path));
       const seen = new Set();
-      return items.filter(o => (seen.has(o.path.toLowerCase()) ? false : seen.add(o.path.toLowerCase())));
+      const merged = [];
+      items.forEach(o => {
+        const key = o.path.toLowerCase();
+        if (seen.has(key)) return;
+        seen.add(key);
+        merged.push(o);
+      });
+      localDecks.forEach(o => {
+        const key = o.path.toLowerCase();
+        if (seen.has(key)) return;
+        seen.add(key);
+        merged.push(o);
+      });
+      return merged;
     }
   } catch {}
   try {
@@ -372,9 +412,22 @@ async function listDecksFromServer(){
       .map(name => ({ name, path: `decks/${decodeURIComponent(name)}` }));
     // Deduplicate by name
     const seen = new Set();
-    return names.filter(o => (seen.has(o.name)?false:seen.add(o.name)));
+    const merged = [];
+    names.forEach(o => {
+      const key = o.path.toLowerCase();
+      if (seen.has(key)) return;
+      seen.add(key);
+      merged.push(o);
+    });
+    localDecks.forEach(o => {
+      const key = o.path.toLowerCase();
+      if (seen.has(key)) return;
+      seen.add(key);
+      merged.push(o);
+    });
+    return merged;
   } catch {
-    return [];
+    return localDecks;
   }
 }
 

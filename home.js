@@ -75,6 +75,7 @@ const STORAGE_LOGS = "FSRS_LOGS_V1";
 const STORAGE_DECK_PATH = "DECK_PATH_V1";
 const STORAGE_RECENT_DECKS = "RECENT_DECKS_V1";
 const STORAGE_DECK_DESCRIPTIONS = "DECK_DESCRIPTIONS_V1";
+const STORAGE_LOCAL_IMPORTED_DECKS = "LOCAL_IMPORTED_DECKS_V1";
 const WEEKLY_GOAL_TARGET = 120;
 const HEATMAP_DAYS = 371;
 const DEFAULT_REVIEW_SECONDS = 35;
@@ -111,6 +112,186 @@ function isExcludedDeckKey(deckKey) {
   if (HIDDEN_HOME_DECK_KEYS.has(normalized)) return true;
   const base = deckBasename(deckKey);
   return !!base && NON_DECK_JSON_FILENAMES.has(base);
+}
+
+function normalizeLocalImportedDeckStore(raw) {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+  const out = {};
+  Object.entries(raw).forEach(([key, value]) => {
+    const normalizedPath = normalizeDeckPathForSave(key);
+    if (!normalizedPath || isExcludedDeckKey(normalizedPath)) return;
+    let cards = null;
+    if (Array.isArray(value)) cards = value;
+    else if (value && typeof value === "object" && Array.isArray(value.cards)) cards = value.cards;
+    if (!Array.isArray(cards)) return;
+    out[normalizedPath] = {
+      cards: cards.filter((card) => card && typeof card === "object"),
+      updatedAt: typeof value?.updatedAt === "string" ? value.updatedAt : new Date().toISOString()
+    };
+  });
+  return out;
+}
+
+function loadLocalImportedDeckStore() {
+  return normalizeLocalImportedDeckStore(safeParseStorageJson(STORAGE_LOCAL_IMPORTED_DECKS, {}));
+}
+
+function saveLocalImportedDeckStore(store) {
+  try {
+    localStorage.setItem(STORAGE_LOCAL_IMPORTED_DECKS, JSON.stringify(normalizeLocalImportedDeckStore(store)));
+    return { ok: true, message: "" };
+  } catch (err) {
+    return {
+      ok: false,
+      message: `Could not save imported deck locally (${String(err?.message || err || "storage error")}).`
+    };
+  }
+}
+
+function getLocalImportedDeckEntry(deckPath = "") {
+  const normalizedPath = normalizeDeckPathForSave(deckPath);
+  if (!normalizedPath) return null;
+  const store = loadLocalImportedDeckStore();
+  const entry = store[normalizedPath];
+  if (!entry || !Array.isArray(entry.cards)) return null;
+  return { path: normalizedPath, cards: entry.cards };
+}
+
+function listLocalImportedDeckPaths() {
+  return Object.keys(loadLocalImportedDeckStore())
+    .map((path) => normalizeDeckPathForSave(path))
+    .filter((path, index, arr) => path && arr.indexOf(path) === index && !isExcludedDeckKey(path));
+}
+
+function persistLocalImportedDeckCreate(deckPath, cards = [], { overwrite = false, allowEmpty = false } = {}) {
+  const normalizedPath = normalizeDeckPathForSave(deckPath);
+  if (!normalizedPath) return { ok: false, message: "Deck path is not editable.", status: 400 };
+  const cleanCards = Array.isArray(cards) ? cards.filter((card) => card && typeof card === "object") : [];
+  if (!cleanCards.length && !allowEmpty) return { ok: false, message: "No cards to import.", status: 400 };
+
+  const store = loadLocalImportedDeckStore();
+  if (store[normalizedPath] && !overwrite) {
+    return {
+      ok: false,
+      message: "A local imported deck with that name already exists in this browser.",
+      status: 409
+    };
+  }
+
+  let clonedCards = [];
+  try {
+    clonedCards = JSON.parse(JSON.stringify(cleanCards));
+  } catch {
+    clonedCards = cleanCards.map((card) => ({ ...(card || {}) }));
+  }
+  store[normalizedPath] = {
+    cards: clonedCards,
+    updatedAt: new Date().toISOString()
+  };
+  const saved = saveLocalImportedDeckStore(store);
+  if (!saved.ok) return { ok: false, message: saved.message, status: 507 };
+
+  return {
+    ok: true,
+    message: "Deck saved in browser local storage (writer unavailable).",
+    status: 200,
+    localOnly: true
+  };
+}
+
+function persistLocalImportedDeckUpdate(deckPath, card, { allowCreate = false } = {}) {
+  const normalizedPath = normalizeDeckPathForSave(deckPath);
+  if (!normalizedPath) return null;
+  const store = loadLocalImportedDeckStore();
+  const entry = store[normalizedPath];
+  if (!entry || !Array.isArray(entry.cards)) return null;
+  const cardId = String(card?.id ?? "").trim();
+  if (!cardId) return { ok: false, message: "Card is missing an id.", status: 400 };
+  const nextCards = entry.cards.slice();
+  const idx = nextCards.findIndex((item) => String(item?.id ?? "").trim() === cardId);
+  if (idx >= 0) nextCards[idx] = card;
+  else if (allowCreate) nextCards.push(card);
+  else return { ok: false, message: "Card id not found.", status: 404 };
+  store[normalizedPath] = { cards: nextCards, updatedAt: new Date().toISOString() };
+  const saved = saveLocalImportedDeckStore(store);
+  if (!saved.ok) return { ok: false, message: saved.message, status: 507 };
+  return { ok: true, message: "", status: 200, localOnly: true };
+}
+
+function persistLocalImportedDeckDelete(deckPath, cardId) {
+  const normalizedPath = normalizeDeckPathForSave(deckPath);
+  if (!normalizedPath) return null;
+  const store = loadLocalImportedDeckStore();
+  const entry = store[normalizedPath];
+  if (!entry || !Array.isArray(entry.cards)) return null;
+  const id = String(cardId ?? "").trim();
+  if (!id) return { ok: false, message: "Card id is required.", status: 400 };
+  const nextCards = entry.cards.filter((item) => String(item?.id ?? "").trim() !== id);
+  if (nextCards.length === entry.cards.length) return { ok: false, message: "Card id not found.", status: 404 };
+  store[normalizedPath] = { cards: nextCards, updatedAt: new Date().toISOString() };
+  const saved = saveLocalImportedDeckStore(store);
+  if (!saved.ok) return { ok: false, message: saved.message, status: 507 };
+  return { ok: true, message: "", status: 200, localOnly: true };
+}
+
+function persistLocalImportedDeckRename(oldDeckPath, newDeckPath) {
+  const oldPath = normalizeDeckPathForSave(oldDeckPath);
+  const nextPath = normalizeDeckPathForSave(newDeckPath);
+  if (!oldPath || !nextPath) return null;
+  const store = loadLocalImportedDeckStore();
+  const entry = store[oldPath];
+  if (!entry || !Array.isArray(entry.cards)) return null;
+  if (oldPath !== nextPath && store[nextPath]) {
+    return { ok: false, message: "A local imported deck with that name already exists.", status: 409 };
+  }
+  store[nextPath] = { cards: entry.cards.slice(), updatedAt: new Date().toISOString() };
+  delete store[oldPath];
+  const saved = saveLocalImportedDeckStore(store);
+  if (!saved.ok) return { ok: false, message: saved.message, status: 507 };
+  return { ok: true, message: "", status: 200, localOnly: true };
+}
+
+function persistLocalImportedDeckRemove(deckPath) {
+  const normalizedPath = normalizeDeckPathForSave(deckPath);
+  if (!normalizedPath) return null;
+  const store = loadLocalImportedDeckStore();
+  if (!store[normalizedPath]) return null;
+  delete store[normalizedPath];
+  const saved = saveLocalImportedDeckStore(store);
+  if (!saved.ok) return { ok: false, message: saved.message, status: 507 };
+  return { ok: true, message: "", status: 200, localOnly: true };
+}
+
+function tryLocalDeckWriteFallback(route, payload, result) {
+  if (result?.ok) return null;
+  const status = Number(result?.status) || 0;
+  if (status !== 0) return null;
+
+  if (route === "/deck/create") {
+    return persistLocalImportedDeckCreate(payload?.deck_path, payload?.cards, {
+      overwrite: !!payload?.overwrite
+    });
+  }
+
+  if (route === "/deck/update") {
+    return persistLocalImportedDeckUpdate(payload?.deck_path, payload?.card, {
+      allowCreate: !!payload?.allow_create
+    });
+  }
+
+  if (route === "/deck/delete") {
+    return persistLocalImportedDeckDelete(payload?.deck_path, payload?.card_id);
+  }
+
+  if (route === "/deck/rename") {
+    return persistLocalImportedDeckRename(payload?.old_path, payload?.new_path);
+  }
+
+  if (route === "/deck/remove") {
+    return persistLocalImportedDeckRemove(payload?.deck_path);
+  }
+
+  return null;
 }
 
 function loadRecentDeckPaths() {
@@ -2152,8 +2333,8 @@ async function submitDeckImportModal() {
     setDeckStatus(
       deckPath,
       rejected > 0
-        ? `Imported ${conversion.cards.length} cards (${rejected} rejected).`
-        : `Imported ${conversion.cards.length} cards.`,
+        ? `Imported ${conversion.cards.length} cards (${rejected} rejected)${result.localOnly ? " to this browser" : ""}.`
+        : `Imported ${conversion.cards.length} cards${result.localOnly ? " to this browser" : ""}.`,
       rejected > 0 ? "info" : "success"
     );
     renderHome();
@@ -2411,6 +2592,12 @@ async function writeDeckViaApi(route, payload, options = {}) {
     updateDeckPersistenceUi();
     return { ...result, queued: false };
   }
+  const localFallback = tryLocalDeckWriteFallback(route, payload, result);
+  if (localFallback?.ok) {
+    removeDeckWriteQueue(route, payload);
+    updateDeckPersistenceUi();
+    return { ...localFallback, queued: false };
+  }
   if (queueOnFailure && shouldQueueDeckWriteFailure(route, result)) {
     upsertDeckWriteQueue(route, payload, result.message);
     updateDeckPersistenceUi();
@@ -2434,7 +2621,8 @@ async function flushPendingDeckWrites() {
   let failureCount = 0;
   let droppedUnsupportedCount = 0;
   let droppedPermanentCount = 0;
-  let removeSupport = await probeDeckWriterRemoveSupport();
+  const needsRemoveProbe = initialQueue.some((item) => String(item?.route || "").trim() === "/deck/remove");
+  let removeSupport = needsRemoveProbe ? await probeDeckWriterRemoveSupport() : deckWriterRemoveSupport;
 
   for (const queued of initialQueue) {
     const queuedRoute = String(queued?.route || "").trim();
@@ -4747,6 +4935,10 @@ function pruneDeletedDeckFromStores(deckKey) {
 }
 
 async function loadDeckCardsForPreview(deckPath) {
+  const localEntry = getLocalImportedDeckEntry(deckPath);
+  if (localEntry) {
+    return normalizeDeckPreviewCards(parseDeckPayloadCards(localEntry.cards), localEntry.path);
+  }
   const response = await fetch(deckPath, { cache: "no-store" });
   if (!response.ok) {
     throw new Error(`Failed to load deck (${response.status}).`);
@@ -4756,6 +4948,7 @@ async function loadDeckCardsForPreview(deckPath) {
 }
 
 async function listDeckPathsFromServer() {
+  const localPaths = listLocalImportedDeckPaths();
   try {
     const response = await fetch("decks/manifest.json", { cache: "no-store" });
     if (response.ok) {
@@ -4774,6 +4967,12 @@ async function listDeckPathsFromServer() {
       const seen = new Set();
       const unique = [];
       paths.forEach((path) => {
+        const key = String(path).toLowerCase();
+        if (seen.has(key)) return;
+        seen.add(key);
+        unique.push(path);
+      });
+      localPaths.forEach((path) => {
         const key = String(path).toLowerCase();
         if (seen.has(key)) return;
         seen.add(key);
@@ -4803,8 +5002,15 @@ async function listDeckPathsFromServer() {
       seen.add(key);
       unique.push(path);
     });
+    localPaths.forEach((path) => {
+      const key = String(path).toLowerCase();
+      if (seen.has(key)) return;
+      seen.add(key);
+      unique.push(path);
+    });
     return new Set(unique);
   } catch {
+    if (localPaths.length) return new Set(localPaths);
     return null;
   }
 }

@@ -65,6 +65,42 @@ function normalizeDrillLevel(value, fallback = DRILL_LEVEL.SINGLE) {
   return fallback;
 }
 const LATIN_MCQ_LIMIT = 6;
+const LOCAL_IMPORTED_DECKS_STORAGE_KEY = 'LOCAL_IMPORTED_DECKS_V1';
+
+function normalizeLocalDeckPathKey(input = '') {
+  let p = String(input || '').trim();
+  if (!p) return '';
+  p = p.split('#')[0].split('?')[0].replace(/\\/g, '/');
+  if (/^[a-z]+:\/\//i.test(p)) {
+    try {
+      const url = new URL(p);
+      p = url.pathname.replace(/^\/+/, '');
+    } catch {}
+  }
+  if (!p) return '';
+  const isAbsWin = /^[a-zA-Z]:\//.test(p);
+  const isAbsPosix = p.startsWith('/');
+  const isUNC = p.startsWith('//');
+  if (!p.includes('/') && !isAbsWin && !isAbsPosix && !isUNC) p = `decks/${p}`;
+  if (!/\.json$/i.test(p)) p += '.json';
+  return p;
+}
+
+function readLocalImportedDeckPayload(deckPath) {
+  try {
+    if (typeof localStorage === 'undefined') return null;
+    const raw = localStorage.getItem(LOCAL_IMPORTED_DECKS_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
+    const key = normalizeLocalDeckPathKey(deckPath);
+    if (!key) return null;
+    const entry = parsed[key];
+    if (Array.isArray(entry)) return entry;
+    if (entry && typeof entry === 'object' && Array.isArray(entry.cards)) return { cards: entry.cards };
+  } catch {}
+  return null;
+}
 
 
 /**
@@ -79,19 +115,24 @@ export async function loadCards({ shuffleAnswers = false, deckPath } = {}) {
   if (isGeneratorPath(url)) {
     deckData = generateDeckForPath(url);
   } else {
-    const resp = await fetch(url);
-    if (!resp.ok) {
-      throw new Error(`Failed to load deck: ${url} (${resp.status})`);
-    }
-    const raw = await resp.text();
-    const trimmed = raw.trim();
-    if (!trimmed) {
-      deckData = [];
+    const localPayload = readLocalImportedDeckPayload(url);
+    if (localPayload != null) {
+      deckData = localPayload;
     } else {
-      try {
-        deckData = JSON.parse(raw);
-      } catch (err) {
-        throw new Error(`Failed to parse deck: ${url} (${err?.message || err})`);
+      const resp = await fetch(url);
+      if (!resp.ok) {
+        throw new Error(`Failed to load deck: ${url} (${resp.status})`);
+      }
+      const raw = await resp.text();
+      const trimmed = raw.trim();
+      if (!trimmed) {
+        deckData = [];
+      } else {
+        try {
+          deckData = JSON.parse(raw);
+        } catch (err) {
+          throw new Error(`Failed to parse deck: ${url} (${err?.message || err})`);
+        }
       }
     }
   }
